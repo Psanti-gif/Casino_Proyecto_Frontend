@@ -9,7 +9,7 @@ import VipSection from '@/components/home/VipSection';
 import LiveCasinoSection from '@/components/home/LiveCasinoSection';
 import StatsSection from '@/components/home/StatsSection';
 import Cta from '@/components/home/Cta';
-import NewsletterSection from '@/components/home/NewsletterSection';
+import NewsletterSection from '@/components/home/NewletterSection';
 
 export default function Home() {
   return (
