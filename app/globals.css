@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 0 0% 100%;
+  }
+
+  body {
+    @apply antialiased bg-gradient-to-b from-casino-dark to-black text-white;
+  }
+
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-casino-dark;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-casino-highlight rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-6 py-3 font-semibold rounded-md transition-all duration-300 inline-block text-center;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-dark;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-secondary text-black hover:bg-secondary-dark;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-white/30 hover:bg-white/10;
+  }
+
+  .glass-card {
+    @apply bg-casino-card bg-opacity-80 backdrop-blur-md rounded-xl border border-casino-highlight shadow-card;
+  }
+
+  .section-padding {
+    @apply py-20 px-4 md:px-8 lg:px-16;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold mb-8 text-center;
+  }
+
+  .gradient-text {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary;
+  }
+
+  .game-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+  }
+
+  .navbar-item {
+    @apply text-white/80 hover:text-white transition-colors duration-200 font-medium;
+  }
+
+  .shiny-border {
+    @apply relative overflow-hidden;
+  }
+
+  .shiny-border::after {
+    @apply content-[''] absolute top-0 left-[-100%] w-[200%] h-full bg-gradient-to-r from-transparent via-white/20 to-transparent;
+    animation: shine 2s infinite;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:translate-y-[-8px] hover:shadow-lg;
+  }
+}
+
+@keyframes shine {
+  from {
+    left: -100%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+.neon-text {
+  text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #E50914, 0 0 20px #E50914;
+  animation: pulsate 2.5s infinite alternate;
+}
+
+@keyframes pulsate {
+  100% {
+    text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #E50914, 0 0 20px #E50914, 0 0 35px #E50914;
+  }
+  0% {
+    text-shadow: 0 0 2px #fff, 0 0 5px #fff, 0 0 10px #E50914, 0 0 15px #E50914;
+  }
+}
