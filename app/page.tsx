@@ -1,31 +1,28 @@
-'use client';
+"use client"
 
-import Hero from '@/components/home/Hero';
-import FeaturedGames from '@/components/home/FeaturedGames';
-import Promotions from '@/components/home/Promotions';
-import HowItWorks from '@/components/home/HowItWorks';
-import Testimonials from '@/components/home/Testimonials';
-import VipSection from '@/components/home/VipSection';
-import LiveCasinoSection from '@/components/home/LiveCasinoSection';
-import StatsSection from '@/components/home/StatsSection';
-import Cta from '@/components/home/Cta';
-import NewsletterSection from '@/components/home/NewletterSection';
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth"
+import { Loader2 } from "lucide-react"
 
-export default function Home() {
+export default function HomePage() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  
+  useEffect(() => {
+    if (!loading) {
+      if (user) {
+        router.push("/main")
+      } else {
+        router.push("/login")
+      }
+    }
+  }, [user, loading, router])
+  
+  // Show loading state while checking authentication
   return (
-    <>
-      <Hero />
-      <div className="relative z-10">
-        <FeaturedGames />
-        <Promotions />
-        <HowItWorks />
-        <LiveCasinoSection />
-        <StatsSection />
-        <VipSection />
-        <Testimonials />
-        <Cta />
-        <NewsletterSection />
-      </div>
-    </>
-  );
+    <div className="flex h-screen items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  )
 }

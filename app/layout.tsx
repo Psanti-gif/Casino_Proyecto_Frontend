@@ -1,19 +1,15 @@
 import './globals.css'
-import type { Metadata } from 'next'
-import { Poppins } from 'next/font/google'
-import { ThemeProvider } from '@/components/ThemeProvider'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
+import { Inter } from 'next/font/google'
+import { Providers } from './providers'
+import { Toaster } from "@/components/ui/toaster"
+import Header from '@/components/Header'
+import Sidebar from '@/components/Sidebar'
 
-const poppins = Poppins({ 
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
-  display: 'swap',
-})
+const inter = Inter({ subsets: ['latin'] })
 
-export const metadata: Metadata = {
-  title: 'Casino Royal | Experiencia Premium de Juegos en Línea',
-  description: 'Experimenta la emoción de los juegos de casino premium con Casino Royal. Juega slots, juegos de mesa y juegos con crupier en vivo con bonos exclusivos.',
+export const metadata = {
+  title: 'CUADRE CASINO',
+  description: 'Sistema de gestión de casinos',
 }
 
 export default function RootLayout({
@@ -22,17 +18,20 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className="scroll-smooth" suppressHydrationWarning>
-      <body className={poppins.className}>
-        <ThemeProvider>
-          <div className="flex flex-col min-h-screen">
+    <html lang="es" suppressHydrationWarning>
+      <body className={`${inter.className} antialiased`}>
+        <Providers>
+          <div className="min-h-screen">
             <Header />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
+            <div className="flex">
+              <Sidebar />
+              <main className="flex-1 p-4 md:p-6">
+                {children}
+                <Toaster />
+              </main>
+            </div>
           </div>
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   )
