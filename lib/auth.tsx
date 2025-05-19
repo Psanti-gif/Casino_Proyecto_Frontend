@@ -54,34 +54,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (username: string, password: string) => {
     try {
       setLoading(true)
-      
-      // Mock user database
-      const users = [
-        { id: '1', username: 'admin', password: 'admin123', role: 'Admin', name: 'Administrador' },
-        { id: '2', username: 'support', password: 'support123', role: 'Support', name: 'Soporte Técnico' },
-        { id: '3', username: 'operator', password: 'operator123', role: 'Operator', name: 'Operador' },
-      ]
-      
-      // Find user with matching credentials
-      const foundUser = users.find(u => u.username === username && u.password === password)
-      
-      if (foundUser) {
-        const { password, ...userWithoutPassword } = foundUser
-        const user = userWithoutPassword as User
-        setUser(user)
-        localStorage.setItem('casinoUser', JSON.stringify(user))
-        router.push('/main')
-        return true
+  
+      const res = await fetch("http://localhost:8000/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          nombre_usuario: username,
+          contrasena: password
+        })
+      })
+  
+      if (!res.ok) {
+        console.error("Login fallido:", await res.json())
+        return false
       }
-      
-      return false
+  
+      const data = await res.json()
+      const user: User = {
+        id: "sin_id", 
+        username: username,
+        name: data.nombre_completo,
+        role: data.rol
+      }
+  
+      setUser(user)
+      localStorage.setItem("casinoUser", JSON.stringify(user))
+      router.push("/main")
+      return true
+  
     } catch (error) {
-      console.error('Login error:', error)
+      console.error("Error al conectar con el backend:", error)
       return false
     } finally {
       setLoading(false)
     }
   }
+  
 
   const logout = () => {
     setUser(null)

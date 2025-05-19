@@ -1,10 +1,14 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/auth'
-import { DollarSign, Gauge, MapPin, Printer, ScrollText, Settings, Bot as Slot, Users } from 'lucide-react'
+import {
+  X, DollarSign, Gauge, MapPin, Printer,
+  ScrollText, Settings, Bot as Slot, Users
+} from 'lucide-react'
 
 interface SidebarItem {
   title: string
@@ -16,77 +20,66 @@ interface SidebarItem {
 export default function Sidebar() {
   const pathname = usePathname()
   const { user } = useAuth()
-  
-  // Don't show sidebar on login page
-  if (pathname === '/login') return null
-  if (!user) return null
-  
+  const [isOpen, setIsOpen] = useState(false)
+
+  // Cargar el estado desde localStorage y escuchar cambios
+  useEffect(() => {
+    const cargarEstado = () => {
+      const sidebarFlag = localStorage.getItem("sidebarOpen")
+      if (sidebarFlag === null) {
+        localStorage.setItem("sidebarOpen", "false")
+        setIsOpen(false)
+      } else {
+        setIsOpen(sidebarFlag === "true")
+      }
+    }
+
+    cargarEstado()
+    window.addEventListener("storage", cargarEstado)
+    return () => window.removeEventListener("storage", cargarEstado)
+  }, [])
+
+  if (pathname === '/login' || !user) return null
+
   const sidebarItems: SidebarItem[] = [
-    {
-      title: 'Dashboard',
-      href: '/',
-      icon: <Gauge className="h-5 w-5" />,
-      roles: ['Admin', 'Support', 'Operator'],
-    },
-    {
-      title: 'Máquinas',
-      href: '/machines',
-      icon: <Slot className="h-5 w-5" />,
-      roles: ['Admin', 'Support', 'Operator'],
-    },
-    {
-      title: 'Ubicaciones',
-      href: '/locations',
-      icon: <MapPin className="h-5 w-5" />,
-      roles: ['Admin', 'Support'],
-    },
-    {
-      title: 'Contadores',
-      href: '/counters',
-      icon: <ScrollText className="h-5 w-5" />,
-      roles: ['Admin', 'Support', 'Operator'],
-    },
-    {
-      title: 'Balance por Máquina',
-      href: '/machine-balance',
-      icon: <DollarSign className="h-5 w-5" />,
-      roles: ['Admin', 'Support', 'Operator'],
-    },
-    {
-      title: 'Balance por Casino',
-      href: '/casino-balance',
-      icon: <DollarSign className="h-5 w-5" />,
-      roles: ['Admin', 'Support', 'Operator'],
-    },
-    {
-      title: 'Reportes',
-      href: '/reports',
-      icon: <Printer className="h-5 w-5" />,
-      roles: ['Admin', 'Support', 'Operator'],
-    },
-    {
-      title: 'Usuarios',
-      href: '/users',
-      icon: <Users className="h-5 w-5" />,
-      roles: ['Admin'],
-    },
-    {
-      title: 'Configuración',
-      href: '/settings',
-      icon: <Settings className="h-5 w-5" />,
-      roles: ['Admin'],
-    },
+    { title: 'Dashboard', href: '/', icon: <Gauge className="h-5 w-5" />, roles: ['Admin', 'Support', 'Operator'] },
+    { title: 'Máquinas', href: '/machines', icon: <Slot className="h-5 w-5" />, roles: ['Admin', 'Support', 'Operator'] },
+    { title: 'Ubicaciones', href: '/locations', icon: <MapPin className="h-5 w-5" />, roles: ['Admin', 'Support'] },
+    { title: 'Contadores', href: '/counters', icon: <ScrollText className="h-5 w-5" />, roles: ['Admin', 'Support', 'Operator'] },
+    { title: 'Balance por Máquina', href: '/machine-balance', icon: <DollarSign className="h-5 w-5" />, roles: ['Admin', 'Support', 'Operator'] },
+    { title: 'Balance por Casino', href: '/casino-balance', icon: <DollarSign className="h-5 w-5" />, roles: ['Admin', 'Support', 'Operator'] },
+    { title: 'Reportes', href: '/reports', icon: <Printer className="h-5 w-5" />, roles: ['Admin', 'Support', 'Operator'] },
+    { title: 'Usuarios', href: '/users', icon: <Users className="h-5 w-5" />, roles: ['Admin'] },
+    { title: 'Configuración', href: '/settings', icon: <Settings className="h-5 w-5" />, roles: ['Admin'] },
   ]
-  
-  // Filter items based on user role
-  const filteredItems = sidebarItems.filter(item => 
+
+  const filteredItems = sidebarItems.filter(item =>
     item.roles.includes(user.role as 'Admin' | 'Support' | 'Operator')
   )
-  
+
   return (
-    <aside className="fixed left-0 top-16 z-20 hidden h-[calc(100vh-4rem)] w-56 border-r bg-background md:block">
-      <div className="flex h-full flex-col gap-2 overflow-y-auto p-4">
-        <nav className="grid gap-1 px-2 group-[[data-collapsed=true]]:justify-center">
+    <aside
+      className={cn(
+        "fixed top-0 left-0 z-40 h-full w-56 border-r bg-background shadow-md transition-transform",
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      )}
+    >
+      {/* Encabezado con botón de cerrar */}
+      <div className="h-16 flex items-center justify-between border-b px-4 text-lg font-bold">
+        CUADRE CASINO
+        <button
+          className="p-1 rounded hover:bg-muted transition"
+          onClick={() => {
+            localStorage.setItem("sidebarOpen", "false")
+            window.dispatchEvent(new Event("storage"))
+          }}
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+
+      <div className="flex h-[calc(100%-4rem)] flex-col gap-2 overflow-y-auto p-4">
+        <nav className="grid gap-1">
           {filteredItems.map((item, index) => (
             <Link
               key={index}

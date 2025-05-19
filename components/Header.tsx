@@ -12,27 +12,41 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, User } from 'lucide-react'
+import { LogOut, Menu, User } from 'lucide-react'
 
 export default function Header() {
   const pathname = usePathname()
   const { user, logout } = useAuth()
-  
-  // Don't show header on login page
+
   if (pathname === '/login') return null
-  
+
+  const toggleSidebar = () => {
+    const current = localStorage.getItem("sidebarOpen") === "true"
+    localStorage.setItem("sidebarOpen", JSON.stringify(!current))
+    window.dispatchEvent(new Event("storage"))
+  }
+
   return (
     <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex gap-6 md:gap-10">
           <Link href="/" className="flex items-center space-x-2">
-            <span className="hidden font-bold sm:inline-block">
+            <span className="hidden font-bold sm:inline-block pl-6">
               CUADRE CASINO
             </span>
           </Link>
         </div>
-        
+
         <div className="flex items-center gap-2">
+          {/* BOTÓN DE MENÚ EN MÓVIL */}
+          <Button
+            variant="ghost"
+            className="md:hidden"
+            onClick={toggleSidebar}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -54,7 +68,7 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-          
+
           <ModeToggle />
         </div>
       </div>
