@@ -75,7 +75,7 @@ const menuItems: MenuItem[] = [
   {
     title: "Configuración",
     description: "Configuración del sistema",
-    href: "/settings",
+    href: "/settings_app",
     icon: <Settings className="h-6 w-6" />,
     roles: ['Admin'],
   },
@@ -84,20 +84,19 @@ const menuItems: MenuItem[] = [
 export default function MainPage() {
   const { user } = useAuth()
   const router = useRouter()
-  
+
   useEffect(() => {
     if (!user) {
       router.push("/login")
     }
   }, [user, router])
-  
+
   if (!user) return null
-  
-  // Filter menu items based on user role
-  const filteredMenuItems = menuItems.filter(item => 
+
+  const filteredMenuItems = menuItems.filter(item =>
     item.roles.includes(user.role as 'Admin' | 'Support' | 'Operator')
   )
-  
+
   return (
     <div className="flex flex-col gap-5">
       <div>
@@ -106,7 +105,7 @@ export default function MainPage() {
           Bienvenido al sistema CUADRE CASINO
         </p>
       </div>
-      
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredMenuItems.map((item, index) => (
           <Link key={index} href={item.href}>

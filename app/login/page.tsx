@@ -6,7 +6,9 @@ import { useAuth } from "@/lib/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle
+} from "@/components/ui/card"
 import { Lock, LogIn } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -19,16 +21,12 @@ export default function LoginPage() {
   const { toast } = useToast()
 
   useEffect(() => {
-    // If user is already logged in, redirect to main page
-    if (user) {
-      router.push("/main")
-    }
+    if (user) router.push("/main")
   }, [user, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    
     try {
       const success = await login(username, password)
       if (success) {
@@ -54,7 +52,6 @@ export default function LoginPage() {
     }
   }
 
-  // If user is already logged in, don't render the login form
   if (user) return null
 
   return (
@@ -70,27 +67,27 @@ export default function LoginPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Usuario</Label>
-              <Input 
-                id="username" 
-                placeholder="Ingrese su usuario" 
-                required 
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)} 
+              <Input
+                id="username"
+                placeholder="Ingrese su usuario"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="Ingrese su contraseña" 
-                required 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
+              <Input
+                id="password"
+                type="password"
+                placeholder="Ingrese su contraseña"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col gap-2">
             <Button className="w-full" type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
@@ -104,6 +101,12 @@ export default function LoginPage() {
                 </>
               )}
             </Button>
+            <a
+              href="/users/recuperar"
+              className="text-sm text-blue-600 hover:underline text-center"
+            >
+              ¿Olvidaste tu contraseña?
+            </a>
           </CardFooter>
         </form>
       </Card>

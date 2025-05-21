@@ -38,23 +38,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
 
   useEffect(() => {
-    // Check if user is already logged in
     const storedUser = localStorage.getItem('casinoUser')
     if (storedUser) {
       setUser(JSON.parse(storedUser))
     }
     setLoading(false)
-    
-    // Redirect to login if not authenticated and not already on login page
-    if (!storedUser && pathname !== '/login' && !loading) {
+
+    if (
+      !storedUser &&
+      !['/login', '/users/recuperar'].includes(pathname) &&
+      !loading
+    ) {
       router.push('/login')
     }
+    
   }, [pathname, router, loading])
 
   const login = async (username: string, password: string) => {
     try {
       setLoading(true)
-  
+
       const res = await fetch("http://localhost:8000/login", {
         method: "POST",
         headers: {
@@ -65,25 +68,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           contrasena: password
         })
       })
-  
+
       if (!res.ok) {
         console.error("Login fallido:", await res.json())
         return false
       }
-  
+
       const data = await res.json()
+
       const user: User = {
-        id: "sin_id", 
+        id: String(data.id), // ✅ ID real recibido del backend
         username: username,
         name: data.nombre_completo,
         role: data.rol
       }
-  
+
       setUser(user)
       localStorage.setItem("casinoUser", JSON.stringify(user))
       router.push("/main")
       return true
-  
+
     } catch (error) {
       console.error("Error al conectar con el backend:", error)
       return false
@@ -91,7 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     }
   }
-  
 
   const logout = () => {
     setUser(null)
