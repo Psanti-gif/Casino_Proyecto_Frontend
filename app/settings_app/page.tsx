@@ -4,13 +4,18 @@ import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@radix-ui/react-label"
+import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
 
 export default function ConfiguracionPage() {
   const [nombreApp, setNombreApp] = useState("")
+  const [telefono, setTelefono] = useState("")
+  const [direccion, setDireccion] = useState("")
+  const [nit, setNit] = useState("")
   const [logoPreview, setLogoPreview] = useState("")
   const [archivoLogo, setArchivoLogo] = useState<File | null>(null)
+  const [colorPrimario, setColorPrimario] = useState("#1d4ed8")
+  const [colorFondo, setColorFondo] = useState("#ffffff")
   const [cargando, setCargando] = useState(true)
   const router = useRouter()
 
@@ -19,8 +24,13 @@ export default function ConfiguracionPage() {
       try {
         const res = await fetch("http://localhost:8000/configuracion")
         const data = await res.json()
-        setNombreApp(data.nombre_aplicacion)
-        setLogoPreview(`http://localhost:8000${data.logo_url}`)
+        setNombreApp(data.nombre_empresa || "")
+        setTelefono(data.telefono || "")
+        setDireccion(data.direccion || "")
+        setNit(data.nit || "")
+        setColorPrimario(data.color_primario || "#1d4ed8")
+        setColorFondo(data.color_fondo || "#ffffff")
+        setLogoPreview(`http://localhost:8000${data.logo_url || ""}`)
       } catch (error) {
         console.error("Error al cargar configuración:", error)
       } finally {
@@ -34,7 +44,12 @@ export default function ConfiguracionPage() {
   const guardarCambios = async () => {
     try {
       const formData = new FormData()
-      formData.append("nombre_aplicacion", nombreApp)
+      formData.append("nombre_empresa", nombreApp)
+      formData.append("telefono", telefono)
+      formData.append("direccion", direccion)
+      formData.append("nit", nit)
+      formData.append("color_primario", colorPrimario)
+      formData.append("color_fondo", colorFondo)
       if (archivoLogo) {
         formData.append("logo", archivoLogo)
       }
@@ -68,19 +83,43 @@ export default function ConfiguracionPage() {
       >
         ← Volver
       </Button>
-  
+
       <Card>
-        <CardHeader>
-          <CardTitle>Configuración del Sistema</CardTitle>
+        <CardHeader className="text-primary">
+          <CardTitle>Configuración del sistema</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-6">
+
           <div>
-            <Label>Nombre de la Aplicación</Label>
-            <Input
-              value={nombreApp}
-              onChange={(e) => setNombreApp(e.target.value)}
-              required
-            />
+            <Label>NIT</Label>
+            <Input value={nit} onChange={(e) => setNit(e.target.value)} required />
+          </div>
+
+          <div>
+            <Label>Nombre de la Empresa</Label>
+            <Input value={nombreApp} onChange={(e) => setNombreApp(e.target.value)} required />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label>Teléfono</Label>
+              <Input value={telefono} onChange={(e) => setTelefono(e.target.value)} />
+            </div>
+            <div>
+              <Label>Dirección</Label>
+              <Input value={direccion} onChange={(e) => setDireccion(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label>Color Primario</Label>
+              <Input type="color" value={colorPrimario} onChange={(e) => setColorPrimario(e.target.value)} />
+            </div>
+            <div>
+              <Label>Color de Fondo</Label>
+              <Input type="color" value={colorFondo} onChange={(e) => setColorFondo(e.target.value)} />
+            </div>
           </div>
 
           <div>

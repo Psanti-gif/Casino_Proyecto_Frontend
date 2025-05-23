@@ -20,7 +20,7 @@ export default function Header() {
   const { user, logout } = useAuth()
   const router = useRouter()
 
-  const [nombreApp, setNombreApp] = useState("CUADRE CASINO")
+  const [nombreEmpresa, setNombreEmpresa] = useState("CUADRE CASINO")
   const [logoUrl, setLogoUrl] = useState("")
   const [timestamp, setTimestamp] = useState(Date.now())
 
@@ -29,7 +29,7 @@ export default function Header() {
       try {
         const res = await fetch("http://localhost:8000/configuracion")
         const data = await res.json()
-        setNombreApp(data.nombre_aplicacion || "CUADRE CASINO")
+        setNombreEmpresa(data.nombre_empresa || "CUADRE CASINO")
         setLogoUrl(data.logo_url || "")
         setTimestamp(Date.now())
       } catch (error) {
@@ -60,8 +60,8 @@ export default function Header() {
                 className="h-8 w-auto max-w-[160px] object-contain"
               />
             )}
-            <span className="hidden font-bold sm:inline-block">
-              {nombreApp}
+            <span className="hidden font-bold sm:inline-block text-primary">
+              {nombreEmpresa}
             </span>
           </Link>
         </div>
@@ -90,7 +90,7 @@ export default function Header() {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={() => router.push("/users/change-password")}>
-                Cambiar contraseña
+                  Cambiar contraseña
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator />
@@ -108,4 +108,3 @@ export default function Header() {
     </header>
   )
 }
-

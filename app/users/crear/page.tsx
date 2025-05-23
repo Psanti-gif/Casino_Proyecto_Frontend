@@ -75,7 +75,7 @@ export default function CrearUsuarioPage() {
       </Button>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="text-primary">
           <CardTitle>Registrar Nuevo Usuario</CardTitle>
         </CardHeader>
         <CardContent>

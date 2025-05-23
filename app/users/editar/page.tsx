@@ -68,7 +68,7 @@ export default function EditarUsuarioPage() {
         ← Volver
       </Button>
       <Card>
-        <CardHeader><CardTitle>Editar Usuario</CardTitle></CardHeader>
+        <CardHeader className="text-primary"><CardTitle>Editar Usuario</CardTitle></CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div><Label>Nombre de Usuario</Label><Input value={form.nombre_usuario} disabled /></div>

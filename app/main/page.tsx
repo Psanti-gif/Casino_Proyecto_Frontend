@@ -31,7 +31,7 @@ const menuItems: MenuItem[] = [
     roles: ['Admin', 'Support', 'Operator'],
   },
   {
-    title: "Ubicaciones",
+    title: "Casinos",
     description: "Gestión de ubicaciones",
     href: "/locations",
     icon: <MapPin className="h-6 w-6" />,
@@ -70,14 +70,14 @@ const menuItems: MenuItem[] = [
     description: "Gestión de usuarios",
     href: "/users",
     icon: <Users className="h-6 w-6" />,
-    roles: ['Admin'],
+    roles: ['Admin', 'Support'],
   },
   {
     title: "Configuración",
     description: "Configuración del sistema",
     href: "/settings_app",
     icon: <Settings className="h-6 w-6" />,
-    roles: ['Admin'],
+    roles: ['Support'],
   },
 ]
 
@@ -100,7 +100,7 @@ export default function MainPage() {
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h1 className="text-3xl font-bold">Menú Principal</h1>
+        <h1 className="text-3xl font-bold text-primary">Menú Principal</h1>
         <p className="text-muted-foreground">
           Bienvenido al sistema CUADRE CASINO
         </p>
@@ -113,7 +113,7 @@ export default function MainPage() {
               <CardHeader>
                 <div className="flex items-center gap-2">
                   {item.icon}
-                  <CardTitle>{item.title}</CardTitle>
+                  <CardTitle className="text-primary">{item.title}</CardTitle>
                 </div>
                 <CardDescription>{item.description}</CardDescription>
               </CardHeader>

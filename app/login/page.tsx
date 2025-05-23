@@ -20,13 +20,34 @@ export default function LoginPage() {
   const router = useRouter()
   const { toast } = useToast()
 
+  const [nombreApp, setNombreApp] = useState("CUADRE CASINO")
+  const [logoUrl, setLogoUrl] = useState("")
+
   useEffect(() => {
-    if (user) router.push("/main")
+    const cargarConfiguracion = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/configuracion")
+        const data = await res.json()
+        setNombreApp(data.nombre_empresa || "CUADRE CASINO")
+        setLogoUrl(data.logo_url || "")
+      } catch (error) {
+        console.error("No se pudo cargar la configuración", error)
+      }
+    }
+
+    cargarConfiguracion()
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      router.push("/main")
+    }
   }, [user, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+
     try {
       const success = await login(username, password)
       if (success) {
@@ -58,11 +79,21 @@ export default function LoginPage() {
     <div className="flex h-screen w-screen items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">CUADRE CASINO</CardTitle>
+          {logoUrl && (
+            <img
+              src={`http://localhost:8000${logoUrl}`}
+              alt="Logo"
+              className="mx-auto h-16 object-contain"
+            />
+          )}
+          <CardTitle className="text-3xl font-bold tracking-tight mt-2">
+            {nombreApp}
+          </CardTitle>
           <CardDescription>
             Ingrese sus credenciales para acceder al sistema
           </CardDescription>
         </CardHeader>
+
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">

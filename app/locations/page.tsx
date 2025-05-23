@@ -1,375 +1,142 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { PlusCircle, Search, Edit, Trash2, CheckCircle } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { Location } from "@/types"
-import { formatDate } from "@/lib/utils"
+  PlusCircle, Edit, XCircle, CheckCircle,
+  RefreshCcw, Download
+} from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Input } from "@/components/ui/input"
+import * as XLSX from "xlsx"
 
-// Sample locations
-const sampleLocations: Location[] = [
-  {
-    id: "L-1001",
-    name: "Casino Royal",
-    code: "CR",
-    city: "Las Vegas",
-    address: "123 Main St, Las Vegas, NV",
-    active: true,
-    createdAt: "2023-01-01T00:00:00Z",
-    updatedAt: "2023-01-01T00:00:00Z",
-  },
-  {
-    id: "L-1002",
-    name: "Fortune Club",
-    code: "FC",
-    city: "Atlantic City",
-    address: "456 Boardwalk, Atlantic City, NJ",
-    active: true,
-    createdAt: "2023-01-02T00:00:00Z",
-    updatedAt: "2023-01-02T00:00:00Z",
-  },
-  {
-    id: "L-1003",
-    name: "Lucky Star",
-    code: "LS",
-    city: "Reno",
-    address: "789 Casino Dr, Reno, NV",
-    active: true,
-    createdAt: "2023-01-03T00:00:00Z",
-    updatedAt: "2023-01-03T00:00:00Z",
-  },
-  {
-    id: "L-1004",
-    name: "Gold Palace",
-    code: "GP",
-    city: "Biloxi",
-    address: "321 Beach Blvd, Biloxi, MS",
-    active: false,
-    createdAt: "2023-01-04T00:00:00Z",
-    updatedAt: "2023-06-15T00:00:00Z",
-  },
-  {
-    id: "L-1005",
-    name: "Silver Moon",
-    code: "SM",
-    city: "Orlando",
-    address: "555 Resort Way, Orlando, FL",
-    active: true,
-    createdAt: "2023-01-05T00:00:00Z",
-    updatedAt: "2023-01-05T00:00:00Z",
-  },
-];
+interface Lugar {
+  id: number
+  codigo: string
+  nombre_casino: string
+  ciudad: string
+  direccion: string
+  telefono: string
+  persona_encargada: string
+  estado: string
+}
 
 export default function LocationsPage() {
-  const [locations, setLocations] = useState<Location[]>(sampleLocations)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [editingLocation, setEditingLocation] = useState<Location | null>(null)
-  const [newLocation, setNewLocation] = useState<Partial<Location>>({
-    name: "",
-    code: "",
-    city: "",
-    address: "",
-    active: true,
-  })
-  
-  const { toast } = useToast()
-  
-  // Filter locations based on search
-  const filteredLocations = locations.filter(
-    (location) =>
-      location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      location.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      location.city.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-  
-  // Submit form handler
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (editingLocation) {
-      // Update existing location
-      setLocations(
-        locations.map((loc) =>
-          loc.id === editingLocation.id
-            ? {
-                ...loc,
-                ...newLocation,
-                updatedAt: new Date().toISOString(),
-              }
-            : loc
-        )
-      )
-      
-      toast({
-        title: "Ubicación actualizada",
-        description: `La ubicación ${newLocation.name} ha sido actualizada correctamente.`,
-      })
-    } else {
-      // Create new location
-      const newLocationId = `L-${Math.floor(1000 + Math.random() * 9000)}`
-      
-      setLocations([
-        ...locations,
-        {
-          ...newLocation,
-          id: newLocationId,
-          active: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        } as Location,
-      ])
-      
-      toast({
-        title: "Ubicación creada",
-        description: `La ubicación ${newLocation.name} ha sido creada correctamente.`,
-      })
+  const [lugares, setLugares] = useState<Lugar[]>([])
+  const [busqueda, setBusqueda] = useState("")
+  const [paginaActual, setPaginaActual] = useState(1)
+  const lugaresPorPagina = 5
+  const router = useRouter()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const cargarLugares = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/listar-lugares")
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        setLugares(data)
+        setPaginaActual(1)
+      }
+    } catch (error) {
+      console.error("Error al cargar lugares:", error)
+      setLugares([])
     }
-    
-    // Reset form and close dialog
-    setNewLocation({
-      name: "",
-      code: "",
-      city: "",
-      address: "",
-      active: true,
-    })
-    setEditingLocation(null)
-    setIsDialogOpen(false)
   }
-  
-  // Edit location
-  const handleEdit = (location: Location) => {
-    setEditingLocation(location)
-    setNewLocation({
-      name: location.name,
-      code: location.code,
-      city: location.city,
-      address: location.address,
-      active: location.active,
-    })
-    setIsDialogOpen(true)
+
+  const inactivarLugar = async (id: number) => {
+    if (!confirm("¿Inactivar este lugar?")) return
+    const res = await fetch(`http://localhost:8000/inactivar-lugar/${id}`, { method: "PUT" })
+    if (res.ok) cargarLugares()
   }
-  
-  // Deactivate location
-  const handleDeactivate = (locationId: string) => {
-    setLocations(
-      locations.map((loc) =>
-        loc.id === locationId
-          ? {
-              ...loc,
-              active: false,
-              updatedAt: new Date().toISOString(),
-            }
-          : loc
-      )
-    )
-    
-    toast({
-      title: "Ubicación desactivada",
-      description: "La ubicación ha sido desactivada correctamente.",
-    })
+
+  const activarLugar = async (id: number) => {
+    const res = await fetch(`http://localhost:8000/activar-lugar/${id}`, { method: "PUT" })
+    if (res.ok) cargarLugares()
   }
-  
-  // Activate location
-  const handleActivate = (locationId: string) => {
-    setLocations(
-      locations.map((loc) =>
-        loc.id === locationId
-          ? {
-              ...loc,
-              active: true,
-              updatedAt: new Date().toISOString(),
-            }
-          : loc
-      )
-    )
-    
-    toast({
-      title: "Ubicación activada",
-      description: "La ubicación ha sido activada correctamente.",
-    })
+
+  const exportarExcel = () => {
+    const datos = filtrados.map((lugar) => ({
+      ID: lugar.id,
+      Código: lugar.codigo,
+      Nombre: lugar.nombre_casino,
+      Ciudad: lugar.ciudad,
+      Dirección: lugar.direccion,
+      Teléfono: lugar.telefono,
+      Encargado: lugar.persona_encargada,
+      Estado: lugar.estado,
+    }))
+    const ws = XLSX.utils.json_to_sheet(datos)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, "Casinos")
+    XLSX.writeFile(wb, "casinos.xlsx")
   }
-  
+
+  useEffect(() => {
+    cargarLugares()
+    inputRef.current?.focus()
+  }, [])
+
+  const filtrados = lugares.filter((l) =>
+    l.nombre_casino.toLowerCase().includes(busqueda.trim().toLowerCase())
+  )
+
+  const totalPaginas = Math.ceil(filtrados.length / lugaresPorPagina)
+  const inicio = (paginaActual - 1) * lugaresPorPagina
+  const visibles = filtrados.slice(inicio, inicio + lugaresPorPagina)
+
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-3xl font-bold">Ubicaciones</h1>
-        <p className="text-muted-foreground">
-          Gestiona las ubicaciones de los casinos
-        </p>
-      </div>
-      
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Buscar por nombre, código o ciudad..."
-              className="pl-8"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-primary bg-transparent">Casinos</h1>
+          <p className="text-muted-foreground">Gestión de usuarios de casinos</p>
         </div>
-        
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              onClick={() => {
-                setEditingLocation(null);
-                setNewLocation({
-                  name: "",
-                  code: "",
-                  city: "",
-                  address: "",
-                  active: true,
-                });
-              }}
-            >
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nueva Ubicación
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <form onSubmit={handleSubmit}>
-              <DialogHeader>
-                <DialogTitle>
-                  {editingLocation ? "Editar Ubicación" : "Crear Nueva Ubicación"}
-                </DialogTitle>
-                <DialogDescription>
-                  {editingLocation
-                    ? "Actualiza los detalles de la ubicación seleccionada"
-                    : "Completa el formulario para registrar una nueva ubicación"}
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label htmlFor="name" className="text-sm font-medium">
-                      Nombre
-                    </label>
-                    <Input
-                      id="name"
-                      value={newLocation.name}
-                      onChange={(e) =>
-                        setNewLocation({ ...newLocation, name: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="code" className="text-sm font-medium">
-                      Código
-                    </label>
-                    <Input
-                      id="code"
-                      value={newLocation.code}
-                      onChange={(e) =>
-                        setNewLocation({ ...newLocation, code: e.target.value })
-                      }
-                      required
-                      maxLength={5}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="city" className="text-sm font-medium">
-                    Ciudad
-                  </label>
-                  <Input
-                    id="city"
-                    value={newLocation.city}
-                    onChange={(e) =>
-                      setNewLocation({ ...newLocation, city: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label htmlFor="address" className="text-sm font-medium">
-                    Dirección
-                  </label>
-                  <Input
-                    id="address"
-                    value={newLocation.address}
-                    onChange={(e) =>
-                      setNewLocation({ ...newLocation, address: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                
-                {editingLocation && (
-                  <div className="space-y-2">
-                    <label htmlFor="active" className="text-sm font-medium">
-                      Estado
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant={newLocation.active ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setNewLocation({ ...newLocation, active: true })}
-                      >
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Activa
-                      </Button>
-                      <Button
-                        type="button"
-                        variant={!newLocation.active ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setNewLocation({ ...newLocation, active: false })}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Inactiva
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit">
-                  {editingLocation ? "Guardar cambios" : "Crear ubicación"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => router.push("/main")}>
+            ← Volver
+          </Button>
+          <Button variant="outline" onClick={exportarExcel}>
+            <Download className="mr-2 h-4 w-4" /> Exportar Excel
+          </Button>
+          <Button className="bg-primary text-white" onClick={() => router.push("/maqinas/crear")}>
+            <PlusCircle className="mr-2 h-4 w-4" /> Ingresar Máquina
+          </Button>
+        </div>
       </div>
-      
+
+      <div className="flex items-center gap-2">
+        <Input
+          ref={inputRef}
+          placeholder="Buscar por nombre de casino"
+          value={busqueda}
+          onChange={(e) => {
+            setBusqueda(e.target.value)
+            setPaginaActual(1)
+          }}
+          className="max-w-sm"
+        />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            setBusqueda("")
+            inputRef.current?.focus()
+            setPaginaActual(1)
+            cargarLugares()
+          }}
+        >
+          <RefreshCcw className="h-4 w-4" />
+        </Button>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>Lista de Ubicaciones</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-primary">Lista de Casinos</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -379,66 +146,57 @@ export default function LocationsPage() {
                 <TableHead>Nombre</TableHead>
                 <TableHead>Ciudad</TableHead>
                 <TableHead>Dirección</TableHead>
+                <TableHead>Teléfono</TableHead>
+                <TableHead>Encargado</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Fecha de Registro</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredLocations.length === 0 ? (
+              {visibles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center">
-                    No se encontraron ubicaciones.
+                  <TableCell colSpan={8} className="h-24 text-center">
+                    No se encontraron lugares.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredLocations.map((location) => (
-                  <TableRow key={location.id}>
-                    <TableCell>{location.code}</TableCell>
+                visibles.map((lugar) => (
+                  <TableRow key={lugar.id}>
+                    <TableCell>{lugar.codigo}</TableCell>
+                    <TableCell>{lugar.nombre_casino}</TableCell>
+                    <TableCell>{lugar.ciudad}</TableCell>
+                    <TableCell>{lugar.direccion}</TableCell>
+                    <TableCell>{lugar.telefono}</TableCell>
+                    <TableCell>{lugar.persona_encargada}</TableCell>
                     <TableCell>
-                      <div className="font-medium">{location.name}</div>
-                      <div className="text-muted-foreground">{location.id}</div>
-                    </TableCell>
-                    <TableCell>{location.city}</TableCell>
-                    <TableCell className="max-w-[300px] truncate">{location.address}</TableCell>
-                    <TableCell>
-                      {location.active ? (
-                        <Badge variant="success">Activa</Badge>
-                      ) : (
-                        <Badge variant="destructive">Inactiva</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {formatDate(new Date(location.createdAt))}
+                      <Badge variant={lugar.estado === "Activo" ? "success" : "destructive"}>
+                        {lugar.estado}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleEdit(location)}
+                          onClick={() => router.push(`/locations/editar?id=${lugar.id}`)}
                         >
                           <Edit className="h-4 w-4" />
-                          <span className="sr-only">Editar</span>
                         </Button>
-                        
-                        {location.active ? (
+                        {lugar.estado === "Activo" ? (
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeactivate(location.id)}
+                            onClick={() => inactivarLugar(lugar.id)}
                           >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Desactivar</span>
+                            <XCircle className="h-4 w-4" />
                           </Button>
                         ) : (
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleActivate(location.id)}
+                            onClick={() => activarLugar(lugar.id)}
                           >
                             <CheckCircle className="h-4 w-4" />
-                            <span className="sr-only">Activar</span>
                           </Button>
                         )}
                       </div>
@@ -448,6 +206,26 @@ export default function LocationsPage() {
               )}
             </TableBody>
           </Table>
+
+          <div className="flex justify-between items-center pt-4">
+            <span className="text-sm">
+              Página {paginaActual} de {totalPaginas || 1}
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={paginaActual === 1}
+                onClick={() => setPaginaActual(paginaActual - 1)}
+              >← Anterior</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={paginaActual === totalPaginas || totalPaginas === 0}
+                onClick={() => setPaginaActual(paginaActual + 1)}
+              >Siguiente →</Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
