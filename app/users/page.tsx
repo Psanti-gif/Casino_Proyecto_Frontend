@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  PlusCircle, Edit, XCircle, CheckCircle, RefreshCcw, Download
+  PlusCircle, Edit, XCircle, CheckCircle, RefreshCcw, Download, ArrowUp, ArrowDown
 } from "lucide-react"
 import * as XLSX from "xlsx"
 import {
@@ -29,10 +29,11 @@ export default function UsersPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [busquedaId, setBusquedaId] = useState("")
   const [busquedaUsuario, setBusquedaUsuario] = useState("")
-  const [mensaje, setMensaje] = useState("")
   const [paginaActual, setPaginaActual] = useState(1)
   const [filtroRol, setFiltroRol] = useState("Todos")
   const [filtroEstado, setFiltroEstado] = useState("Todos")
+  const [ordenColumna, setOrdenColumna] = useState<keyof Usuario | null>(null)
+  const [ordenAscendente, setOrdenAscendente] = useState(true)
   const usuariosPorPagina = 5
   const router = useRouter()
 
@@ -40,49 +41,12 @@ export default function UsersPage() {
     const res = await fetch("http://localhost:8000/listar-usuarios")
     const data = await res.json()
     setUsuarios(data)
-    setMensaje("")
     setPaginaActual(1)
   }
 
   useEffect(() => {
     recargar()
   }, [])
-
-  useEffect(() => {
-    const filtrar = async () => {
-      if (busquedaId.trim() !== "") {
-        const res = await fetch(`http://localhost:8000/buscar-usuario-id/${busquedaId.trim()}`)
-        const data = await res.json()
-        if (data?.id) {
-          setUsuarios([data])
-          setMensaje("")
-          return
-        } else {
-          setUsuarios([])
-          setMensaje("Usuario no encontrado")
-          return
-        }
-      }
-
-      if (busquedaUsuario.trim() !== "") {
-        const res = await fetch(`http://localhost:8000/buscar-usuario/${busquedaUsuario.trim()}`)
-        const data = await res.json()
-        if (data?.id) {
-          setUsuarios([data])
-          setMensaje("")
-          return
-        } else {
-          setUsuarios([])
-          setMensaje("Usuario no encontrado")
-          return
-        }
-      }
-
-      recargar()
-    }
-
-    filtrar()
-  }, [busquedaId, busquedaUsuario])
 
   const handleInhabilitar = async (id: number) => {
     if (!confirm("¿Inhabilitar este usuario?")) return
@@ -109,11 +73,35 @@ export default function UsersPage() {
     XLSX.writeFile(libro, "usuarios.xlsx")
   }
 
-  const usuariosFiltrados = usuarios.filter(usuario => {
+  const cambiarOrden = (col: keyof Usuario) => {
+    if (ordenColumna === col) {
+      setOrdenAscendente(!ordenAscendente)
+    } else {
+      setOrdenColumna(col)
+      setOrdenAscendente(true)
+    }
+  }
+
+  const iconoOrden = (col: keyof Usuario) =>
+    ordenColumna === col ? (ordenAscendente ? <ArrowUp size={14} /> : <ArrowDown size={14} />) : null
+
+  let usuariosFiltrados = usuarios.filter(usuario => {
+    const coincideId = busquedaId.trim() === "" || usuario.id.toString() === busquedaId.trim()
+    const coincideNombre = busquedaUsuario.trim() === "" || usuario.nombre_usuario.toLowerCase().includes(busquedaUsuario.toLowerCase())
     const coincideRol = filtroRol === "Todos" || usuario.rol === filtroRol
     const coincideEstado = filtroEstado === "Todos" || usuario.estado === filtroEstado
-    return coincideRol && coincideEstado
+    return coincideId && coincideNombre && coincideRol && coincideEstado
   })
+
+  if (ordenColumna) {
+    usuariosFiltrados = usuariosFiltrados.sort((a, b) => {
+      const valA = a[ordenColumna] ?? ""
+      const valB = b[ordenColumna] ?? ""
+      return ordenAscendente
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA))
+    })
+  }
 
   const inicio = (paginaActual - 1) * usuariosPorPagina
   const usuariosVisibles = usuariosFiltrados.slice(inicio, inicio + usuariosPorPagina)
@@ -143,11 +131,8 @@ export default function UsersPage() {
           <Input
             placeholder="Ej: 1"
             value={busquedaId}
-            onChange={(e) => {
-              setBusquedaId(e.target.value)
-              setBusquedaUsuario("")
-            }}
-            className="w-[160px]"
+            onChange={(e) => setBusquedaId(e.target.value)}
+            className="w-[120px]"
             type="number"
             min="0"
           />
@@ -158,10 +143,7 @@ export default function UsersPage() {
           <Input
             placeholder="Ej: juanperez"
             value={busquedaUsuario}
-            onChange={(e) => {
-              setBusquedaUsuario(e.target.value)
-              setBusquedaId("")
-            }}
+            onChange={(e) => setBusquedaUsuario(e.target.value)}
             className="w-[160px]"
           />
         </div>
@@ -210,14 +192,13 @@ export default function UsersPage() {
             setFiltroRol("Todos")
             setFiltroEstado("Todos")
             setPaginaActual(1)
+            setOrdenColumna(null)
             recargar()
           }}
         >
           <RefreshCcw className="h-4 w-4" />
         </Button>
       </div>
-
-      {mensaje && <p className="text-sm text-red-500">{mensaje}</p>}
 
       <Card>
         <CardHeader>
@@ -227,11 +208,21 @@ export default function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Usuario</TableHead>
-                <TableHead>Nombre Completo</TableHead>
-                <TableHead>Rol</TableHead>
-                <TableHead>Estado</TableHead>
+                <TableHead onClick={() => cambiarOrden("id")} className="cursor-pointer">
+                  ID {iconoOrden("id")}
+                </TableHead>
+                <TableHead onClick={() => cambiarOrden("nombre_usuario")} className="cursor-pointer">
+                  Usuario {iconoOrden("nombre_usuario")}
+                </TableHead>
+                <TableHead onClick={() => cambiarOrden("nombre_completo")} className="cursor-pointer">
+                  Nombre Completo {iconoOrden("nombre_completo")}
+                </TableHead>
+                <TableHead onClick={() => cambiarOrden("rol")} className="cursor-pointer">
+                  Rol {iconoOrden("rol")}
+                </TableHead>
+                <TableHead onClick={() => cambiarOrden("estado")} className="cursor-pointer">
+                  Estado {iconoOrden("estado")}
+                </TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -279,18 +270,10 @@ export default function UsersPage() {
           <div className="flex justify-between items-center pt-4">
             <span className="text-sm">Página {paginaActual} de {totalPaginas || 1}</span>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={paginaActual === 1}
-                onClick={() => setPaginaActual(paginaActual - 1)}
-              >← Anterior</Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={paginaActual === totalPaginas || totalPaginas === 0}
-                onClick={() => setPaginaActual(paginaActual + 1)}
-              >Siguiente →</Button>
+              <Button variant="outline" size="sm" disabled={paginaActual === 1}
+                onClick={() => setPaginaActual(paginaActual - 1)}>← Anterior</Button>
+              <Button variant="outline" size="sm" disabled={paginaActual === totalPaginas || totalPaginas === 0}
+                onClick={() => setPaginaActual(paginaActual + 1)}>Siguiente →</Button>
             </div>
           </div>
         </CardContent>

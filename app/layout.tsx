@@ -4,6 +4,7 @@ import { Providers } from './providers'
 import { Toaster } from '@/components/ui/toaster'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
+import Footer from '@/components/Footer' // ✅ nuevo
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,7 +18,6 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Obtener configuración desde backend
   let config = {
     color_primario: '#1d4ed8',
     color_fondo: '#ffffff'
@@ -51,6 +51,7 @@ export default async function RootLayout({
               <main className="flex-1 p-4 md:p-6">
                 {children}
                 <Toaster />
+                <Footer /> {/* ✅ se muestra al final del contenido */}
               </main>
             </div>
           </div>

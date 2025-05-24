@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ModeToggle } from '@/components/mode-toggle'
 import { useAuth } from '@/lib/auth'
 import {
   DropdownMenu,
@@ -22,6 +21,8 @@ export default function Header() {
 
   const [nombreEmpresa, setNombreEmpresa] = useState("CUADRE CASINO")
   const [logoUrl, setLogoUrl] = useState("")
+  const [fechaHora, setFechaHora] = useState("")
+  const [sistemaEnLinea, setSistemaEnLinea] = useState(false)
   const [timestamp, setTimestamp] = useState(Date.now())
 
   useEffect(() => {
@@ -37,7 +38,29 @@ export default function Header() {
       }
     }
 
+    const verificarConexion = async () => {
+      try {
+        const res = await fetch("http://localhost:8000")
+        setSistemaEnLinea(res.ok)
+      } catch {
+        setSistemaEnLinea(false)
+      }
+    }
+
+    const actualizarHora = () => {
+      const ahora = new Date()
+      setFechaHora(ahora.toLocaleString("es-CO", {
+        weekday: "short", year: "numeric", month: "short", day: "numeric",
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+      }))
+    }
+
     cargarConfiguracion()
+    verificarConexion()
+    actualizarHora()
+    const intervaloHora = setInterval(actualizarHora, 1000)
+
+    return () => clearInterval(intervaloHora)
   }, [])
 
   if (pathname === '/login') return null
@@ -60,21 +83,20 @@ export default function Header() {
                 className="h-8 w-auto max-w-[160px] object-contain"
               />
             )}
-            <span className="hidden font-bold sm:inline-block text-primary">
+            <span className="hidden sm:inline-block font-bold text-primary">
               {nombreEmpresa}
             </span>
           </Link>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            className="md:hidden"
-            onClick={toggleSidebar}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-
+        <div className="flex items-center gap-6 text-xs text-muted-foreground">
+  <span>{fechaHora}</span>
+  <span className={sistemaEnLinea ? "text-green-600 font-medium" : "text-red-600"}>
+    {sistemaEnLinea ? "✔ Sistema en línea" : "✖ Sin conexión"}
+  </span>
+  {user && (
+    <span className="text-primary font-semibold">Rol: {user.role}</span>
+  )}
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -101,8 +123,6 @@ export default function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           )}
-
-          <ModeToggle />
         </div>
       </div>
     </header>
