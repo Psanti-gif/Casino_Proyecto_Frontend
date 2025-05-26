@@ -6,9 +6,9 @@ export default function Footer() {
   const [direccion, setDireccion] = useState("")
   const [telefono, setTelefono] = useState("")
   const [nit, setNit] = useState("")
+  const [correo, setCorreo] = useState("")
   const [empresa, setEmpresa] = useState("CUADRE CASINO")
 
-  // Información complementaria (lado derecho)
   const version = "1.0.0"
   const sede = "Medellín"
   const ambiente = "Producción"
@@ -21,6 +21,7 @@ export default function Footer() {
         setDireccion(data.direccion || "")
         setTelefono(data.telefono || "")
         setNit(data.nit || "")
+        setCorreo(data.correo || "")
         setEmpresa(data.nombre_empresa || "CUADRE CASINO")
       } catch (error) {
         console.error("Error al cargar configuración del footer:", error)
@@ -37,10 +38,10 @@ export default function Footer() {
         {/* IZQUIERDA */}
         <div className="flex flex-col gap-1 text-left">
           <div className="flex flex-wrap gap-4">
-            <span>📍 {direccion}</span>
-            <span>📞 {telefono}</span>
-            <span>🧾 NIT: {nit}</span>
-            <span>✉️ soporte@empresa.com</span>
+            <span>Dirección: {direccion}</span>
+            <span>Teléfono: {telefono}</span>
+            <span>NIT: {nit}</span>
+            <span>Correo: {correo}</span>
           </div>
           <span className="text-[10px]">
             &copy; {new Date().getFullYear()} {empresa}. Todos los derechos reservados.
@@ -61,4 +62,3 @@ export default function Footer() {
     </footer>
   )
 }
-

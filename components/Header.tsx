@@ -90,24 +90,24 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-6 text-xs text-muted-foreground">
-  <span>{fechaHora}</span>
-  <span className={sistemaEnLinea ? "text-green-600 font-medium" : "text-red-600"}>
-    {sistemaEnLinea ? "✔ Sistema en línea" : "✖ Sin conexión"}
-  </span>
-  {user && (
-    <span className="text-primary font-semibold">Rol: {user.role}</span>
-  )}
+          <span>{fechaHora}</span>
+          <span className={sistemaEnLinea ? "text-green-600 font-medium" : "text-red-600"}>
+            {sistemaEnLinea ? "En línea" : "✖ Sin conexión"}
+          </span>
+          {user && (
+            <span className="text-muted-foreground">Rol: {user.role}</span>
+          )}
           {user && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>{user.name}</span>
+                  <span className="text-muted-foreground">{user.name}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuItem className="flex flex-col items-start">
-                  <div className="text-xs font-medium">{user.name}</div>
+                  <div className="text-xs text-muted-foreground">{user.name}</div>
                   <div className="text-xs text-muted-foreground">{user.role}</div>
                 </DropdownMenuItem>
 

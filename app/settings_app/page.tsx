@@ -12,6 +12,7 @@ export default function ConfiguracionPage() {
   const [telefono, setTelefono] = useState("")
   const [direccion, setDireccion] = useState("")
   const [nit, setNit] = useState("")
+  const [correo, setCorreo] = useState("")
   const [logoPreview, setLogoPreview] = useState("")
   const [archivoLogo, setArchivoLogo] = useState<File | null>(null)
   const [colorPrimario, setColorPrimario] = useState("#1d4ed8")
@@ -28,6 +29,7 @@ export default function ConfiguracionPage() {
         setTelefono(data.telefono || "")
         setDireccion(data.direccion || "")
         setNit(data.nit || "")
+        setCorreo(data.correo || "")
         setColorPrimario(data.color_primario || "#1d4ed8")
         setColorFondo(data.color_fondo || "#ffffff")
         setLogoPreview(`http://localhost:8000${data.logo_url || ""}`)
@@ -48,6 +50,7 @@ export default function ConfiguracionPage() {
       formData.append("telefono", telefono)
       formData.append("direccion", direccion)
       formData.append("nit", nit)
+      formData.append("correo", correo)
       formData.append("color_primario", colorPrimario)
       formData.append("color_fondo", colorFondo)
       if (archivoLogo) {
@@ -109,6 +112,16 @@ export default function ConfiguracionPage() {
               <Label>Dirección</Label>
               <Input value={direccion} onChange={(e) => setDireccion(e.target.value)} />
             </div>
+          </div>
+
+          <div>
+            <Label>Correo</Label>
+            <Input
+              type="email"
+              value={correo}
+              onChange={(e) => setCorreo(e.target.value)}
+              placeholder="correo@empresa.com"
+            />
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
