@@ -235,12 +235,13 @@ export default function MachineBalancePage() {
       return;
     }
 
-    // Si tu backend solo soporta una máquina por petición, puedes enviar solo una
-    // Si soporta varias, adapta el payload y el backend
     const balances: MachineBalance[] = [];
 
     for (const machine of machinesToProcess) {
       try {
+        const casinoName = getLocationName(machine.locationId);
+        const machineName = getMachineName(machine.id);
+
         const response = await fetch("http://127.0.0.1:8000/cuadre_maquina", {
           method: "POST",
           headers: {
@@ -249,8 +250,10 @@ export default function MachineBalancePage() {
           body: JSON.stringify({
             fecha_inicio: startDateStr,
             fecha_fin: endDateStr,
-            maquina_id: machine.id,
-            denominacion: machine.denomination, // <--- Agrega este campo
+            casino: casinoName,           // nombre del casino
+            maquina: machineName,         // nombre de la máquina
+            id: machine.assetCode,        // aquí se envía el código en vez del id
+            denominacion: machine.denomination,
           }),
         });
 
