@@ -1,26 +1,25 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  Select, SelectTrigger, SelectValue, SelectContent, SelectItem
-} from "@/components/ui/select"
+  Popover,
+  PopoverTrigger,
+  PopoverContent
+} from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { Calendar as CalendarIcon } from "lucide-react"
 
-export default function CrearContadorPage() {
-  const [casinos, setCasinos] = useState<any[]>([])
-  const [maquinas, setMaquinas] = useState<any[]>([])
-  const [casinoSeleccionado, setCasinoSeleccionado] = useState("")
-  const [maquinasFiltradas, setMaquinasFiltradas] = useState<any[]>([])
-  const [mensaje, setMensaje] = useState("")
+export default function EditarContadorPage() {
+  const searchParams = useSearchParams()
   const router = useRouter()
+  const fechaParam = searchParams.get("fecha")
+  const casinoParam = searchParams.get("casino")
 
   const [datos, setDatos] = useState({
     fecha: "",
@@ -32,55 +31,49 @@ export default function CrearContadorPage() {
     billetero_contador: "",
     recorte: false
   })
-
-  const fechaFormateada = (fecha: string) =>
-    new Date(fecha).toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    })
+  const [mensaje, setMensaje] = useState("")
 
   useEffect(() => {
-    fetch("http://localhost:8000/listar-lugares")
-      .then(res => res.json())
-      .then(data => setCasinos(Array.isArray(data) ? data : []))
-
-    fetch("http://localhost:8000/maquinas")
-      .then(res => res.json())
-      .then(data => {
-        const activas = Array.isArray(data)
-          ? data.filter((m: any) => m.activo === 1)
-          : []
-        setMaquinas(activas)
-      })
-  }, [])
-
-  useEffect(() => {
-    const filtradas = maquinas.filter((m: any) => m.casino === casinoSeleccionado)
-    setMaquinasFiltradas(filtradas)
-    setDatos(prev => ({ ...prev, casino: casinoSeleccionado, maquina: "" }))
-  }, [casinoSeleccionado, maquinas])
+    if (fechaParam && casinoParam) {
+      fetch(`http://localhost:8000/buscar/?fecha=${fechaParam}&casino=${casinoParam}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            const registro = data[0]
+            setDatos({
+              fecha: registro.fecha,
+              casino: registro.casino,
+              maquina: registro.maquina,
+              in_contador: registro.in.toString(),
+              out_contador: registro.out.toString(),
+              jackpot_contador: registro.jackpot.toString(),
+              billetero_contador: registro.billetero.toString(),
+              recorte: registro.recorte || false
+            })
+          } else {
+            setMensaje("Registro no encontrado")
+          }
+        })
+    }
+  }, [fechaParam, casinoParam])
 
   const manejarCambio = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
-    setDatos({
-      ...datos,
-      [name]: type === "checkbox" ? checked : value
+    setDatos({ ...datos, [name]: type === "checkbox" ? checked : value })
+  }
+
+  const formatearFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
     })
   }
 
   const guardar = async () => {
     setMensaje("")
-    const campos = ["fecha", "casino", "maquina", "in_contador", "out_contador", "jackpot_contador", "billetero_contador"]
-    for (let campo of campos) {
-      if (!datos[campo as keyof typeof datos]) {
-        setMensaje("Todos los campos son obligatorios")
-        return
-      }
-    }
-
-    const res = await fetch("http://localhost:8000/registrar", {
-      method: "POST",
+    const res = await fetch("http://localhost:8000/modificar", {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...datos,
@@ -94,10 +87,10 @@ export default function CrearContadorPage() {
 
     const data = await res.json()
     if (res.ok) {
-      alert("Contador registrado exitosamente")
+      alert("Registro modificado correctamente")
       router.push("/counters")
     } else {
-      setMensaje(data.error || "Error al registrar")
+      setMensaje(data.error || "No se pudo modificar el registro")
     }
   }
 
@@ -105,11 +98,10 @@ export default function CrearContadorPage() {
     <div className="max-w-2xl mx-auto mt-8">
       <Card>
         <CardHeader className="text-primary">
-          <CardTitle>Registrar Contador</CardTitle>
+          <CardTitle>Editar Contador</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
-
-          {/* FECHA CALENDARIO */}
+          {/* FECHA (desplegable) */}
           <div className="flex flex-col gap-2">
             <Label>Fecha</Label>
             <Popover>
@@ -119,7 +111,7 @@ export default function CrearContadorPage() {
                   className="w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {datos.fecha ? fechaFormateada(datos.fecha) : "Selecciona una fecha"}
+                  {datos.fecha ? formatearFecha(datos.fecha) : "Selecciona una fecha"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -138,45 +130,16 @@ export default function CrearContadorPage() {
             </Popover>
           </div>
 
-          {/* CASINO */}
           <div>
             <Label>Casino</Label>
-            <Select value={casinoSeleccionado} onValueChange={setCasinoSeleccionado}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona un casino" />
-              </SelectTrigger>
-              <SelectContent>
-                {casinos.map((casino: any) => (
-                  <SelectItem key={casino.codigo} value={casino.nombre_casino}>
-                    {casino.nombre_casino}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input type="text" value={datos.casino} disabled />
           </div>
 
-          {/* MÁQUINA */}
           <div>
             <Label>Máquina</Label>
-            <Select
-              value={datos.maquina}
-              onValueChange={(value) => setDatos({ ...datos, maquina: value })}
-              disabled={!casinoSeleccionado}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona una máquina" />
-              </SelectTrigger>
-              <SelectContent>
-                {maquinasFiltradas.map((maquina: any) => (
-                  <SelectItem key={maquina.id} value={maquina.codigo}>
-                    {maquina.codigo} - {maquina.marca} {maquina.modelo}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Input type="text" value={datos.maquina} disabled />
           </div>
 
-          {/* CONTADORES */}
           <div>
             <Label>Contador IN</Label>
             <Input
@@ -184,7 +147,6 @@ export default function CrearContadorPage() {
               name="in_contador"
               value={datos.in_contador}
               onChange={manejarCambio}
-              min={0}
             />
           </div>
 
@@ -195,7 +157,6 @@ export default function CrearContadorPage() {
               name="out_contador"
               value={datos.out_contador}
               onChange={manejarCambio}
-              min={0}
             />
           </div>
 
@@ -206,7 +167,6 @@ export default function CrearContadorPage() {
               name="jackpot_contador"
               value={datos.jackpot_contador}
               onChange={manejarCambio}
-              min={0}
             />
           </div>
 
@@ -217,18 +177,14 @@ export default function CrearContadorPage() {
               name="billetero_contador"
               value={datos.billetero_contador}
               onChange={manejarCambio}
-              min={0}
             />
           </div>
 
-          {/* CHECKBOX RECORTE */}
           <div className="flex items-center space-x-2">
             <Checkbox
               id="recorte"
               checked={datos.recorte}
-              onCheckedChange={(value) =>
-                setDatos({ ...datos, recorte: Boolean(value) })
-              }
+              onCheckedChange={(value) => setDatos({ ...datos, recorte: Boolean(value) })}
             />
             <Label htmlFor="recorte">¿Hubo corte o reinicio de la máquina?</Label>
           </div>
@@ -239,11 +195,12 @@ export default function CrearContadorPage() {
             <Button variant="outline" onClick={() => router.push("/counters")}>
               Cancelar
             </Button>
-            <Button onClick={guardar}>Guardar</Button>
+            <Button onClick={guardar}>
+              Guardar Cambios
+            </Button>
           </div>
         </CardContent>
       </Card>
     </div>
   )
 }
-

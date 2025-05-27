@@ -1,26 +1,24 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table"
-import { PlusCircle } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
+import { PlusCircle, Edit } from "lucide-react"
 
 interface CounterRecord {
-  id: string
-  machineId: string
+  fecha: string
   casino: string
-  date: string
-  inValue: number
-  outValue: number
-  jackpotValue: number
-  billeteroValue: number
-  createdAt: string
-  updatedAt: string
-  createdBy: string
+  maquina: string
+  in: number
+  out: number
+  jackpot: number
+  billetero: number
+  recorte: boolean
 }
 
 export default function CountersPage() {
@@ -32,20 +30,7 @@ export default function CountersPage() {
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
-          const parsed = data.map((item: any, idx: number) => ({
-            id: `R-${idx + 1}`,
-            machineId: item.maquina,
-            casino: item.casino,
-            date: item.fecha,
-            inValue: item.in,
-            outValue: item.out,
-            jackpotValue: item.jackpot,
-            billeteroValue: item.billetero,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            createdBy: "1"
-          }))
-          setRecords(parsed)
+          setRecords(data)
         } else {
           console.warn("Respuesta inesperada del backend:", data)
           setRecords([])
@@ -61,9 +46,6 @@ export default function CountersPage() {
           <p className="text-muted-foreground">Registros diarios de contadores</p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={() => router.push("/main")}>
-            ← Volver
-          </Button>
           <Button className="bg-primary text-white" onClick={() => router.push("/counters/crear")}>
             <PlusCircle className="mr-2 h-4 w-4" /> Registrar Contador
           </Button>
@@ -71,8 +53,8 @@ export default function CountersPage() {
       </div>
 
       <Card>
-        <CardHeader className="text-primary">
-          <CardTitle>Lista de Registros</CardTitle>
+        <CardHeader>
+          <CardTitle className="text-primary">Lista de Registros</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -85,23 +67,41 @@ export default function CountersPage() {
                 <TableHead className="text-right">OUT</TableHead>
                 <TableHead className="text-right">Jackpot</TableHead>
                 <TableHead className="text-right">Billetero</TableHead>
+                <TableHead>Recorte</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {records.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-6">No hay registros</TableCell>
+                  <TableCell colSpan={9} className="text-center py-6">No hay registros</TableCell>
                 </TableRow>
               ) : (
-                records.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>{r.date}</TableCell>
+                records.map((r, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{r.fecha}</TableCell>
                     <TableCell>{r.casino}</TableCell>
-                    <TableCell>{r.machineId}</TableCell>
-                    <TableCell className="text-right">{r.inValue.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{r.outValue.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{r.jackpotValue.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{r.billeteroValue.toLocaleString()}</TableCell>
+                    <TableCell>{r.maquina}</TableCell>
+                    <TableCell className="text-right">{r.in.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{r.out.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{r.jackpot.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{r.billetero.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <Badge variant={r.recorte ? "destructive" : "default"}>
+                        {r.recorte ? "Sí" : "No"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() =>
+                          router.push(`/counters/editar?fecha=${r.fecha}&casino=${encodeURIComponent(r.casino)}`)
+                        }
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
