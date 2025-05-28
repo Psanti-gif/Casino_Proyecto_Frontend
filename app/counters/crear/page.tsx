@@ -10,9 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem
 } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 export default function CrearContadorPage() {
   const [casinos, setCasinos] = useState<any[]>([])
@@ -32,13 +30,6 @@ export default function CrearContadorPage() {
     billetero_contador: "",
     recorte: false
   })
-
-  const fechaFormateada = (fecha: string) =>
-    new Date(fecha).toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    })
 
   useEffect(() => {
     fetch("http://localhost:8000/listar-lugares")
@@ -103,42 +94,29 @@ export default function CrearContadorPage() {
 
   return (
     <div className="max-w-2xl mx-auto mt-8">
+      <div className="mb-4">
+        <Button variant="outline" onClick={() => router.push("/counters")}>
+          <ArrowLeft className="h-4 w-4 mr-2" /> Volver
+        </Button>
+      </div>
+
       <Card>
         <CardHeader className="text-primary">
           <CardTitle>Registrar Contador</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
-
-          {/* FECHA CALENDARIO */}
-          <div className="flex flex-col gap-2">
+          {/* Fecha como input tipo date */}
+          <div>
             <Label>Fecha</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {datos.fecha ? fechaFormateada(datos.fecha) : "Selecciona una fecha"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={datos.fecha ? new Date(datos.fecha) : undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      const iso = date.toISOString().split("T")[0]
-                      setDatos({ ...datos, fecha: iso })
-                    }
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Input
+              type="date"
+              name="fecha"
+              value={datos.fecha}
+              onChange={(e) => setDatos({ ...datos, fecha: e.target.value })}
+              max={new Date().toISOString().split("T")[0]}
+            />
           </div>
 
-          {/* CASINO */}
           <div>
             <Label>Casino</Label>
             <Select value={casinoSeleccionado} onValueChange={setCasinoSeleccionado}>
@@ -155,7 +133,6 @@ export default function CrearContadorPage() {
             </Select>
           </div>
 
-          {/* MÁQUINA */}
           <div>
             <Label>Máquina</Label>
             <Select
@@ -176,7 +153,6 @@ export default function CrearContadorPage() {
             </Select>
           </div>
 
-          {/* CONTADORES */}
           <div>
             <Label>Contador IN</Label>
             <Input
@@ -221,14 +197,11 @@ export default function CrearContadorPage() {
             />
           </div>
 
-          {/* CHECKBOX RECORTE */}
           <div className="flex items-center space-x-2">
             <Checkbox
               id="recorte"
               checked={datos.recorte}
-              onCheckedChange={(value) =>
-                setDatos({ ...datos, recorte: Boolean(value) })
-              }
+              onCheckedChange={(value) => setDatos({ ...datos, recorte: Boolean(value) })}
             />
             <Label htmlFor="recorte">¿Hubo corte o reinicio de la máquina?</Label>
           </div>
@@ -236,9 +209,7 @@ export default function CrearContadorPage() {
           {mensaje && <p className="text-sm text-red-500">{mensaje}</p>}
 
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => router.push("/counters")}>
-              Cancelar
-            </Button>
+            <Button variant="outline" onClick={() => router.push("/counters")}>Cancelar</Button>
             <Button onClick={guardar}>Guardar</Button>
           </div>
         </CardContent>

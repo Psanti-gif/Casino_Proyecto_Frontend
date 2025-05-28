@@ -213,7 +213,7 @@ export default function MachineBalancePage() {
     });
   };
   
-  // Reemplaza calculateBalances por handleProcesarBalance:
+  // Reemplaza la función handleProcesarBalance por esta versión:
   const handleProcesarBalance = async () => {
     if (!startDate || !endDate) return;
 
@@ -250,9 +250,9 @@ export default function MachineBalancePage() {
           body: JSON.stringify({
             fecha_inicio: startDateStr,
             fecha_fin: endDateStr,
-            casino: casinoName,           // nombre del casino
-            maquina: machineName,         // nombre de la máquina
-            id: machine.assetCode,        // aquí se envía el código en vez del id
+            casino: casinoName,
+            maquina: machineName,
+            id: machine.assetCode,
             denominacion: machine.denomination,
           }),
         });
@@ -261,21 +261,43 @@ export default function MachineBalancePage() {
         const result = await response.json();
         console.log("Respuesta backend:", result);
 
-        balances.push({
-          machineId: machine.id,
-          startDate: startDateStr,
-          endDate: endDateStr,
-          initialIn: result.total_in ?? 0,
-          finalIn: result.total_in ?? 0,
-          initialOut: result.total_out ?? 0,
-          finalOut: result.total_out ?? 0,
-          totalJackpot: result.total_jackpot ?? 0,
-          totalBilletero: result.total_billetero ?? 0,
-          playedCredits: 0,
-          playedMoney: 0,
-          netProfit: (result.total_in ?? 0) - (result.total_out ?? 0),
-          denomination: machine.denomination ?? 0,
-        });
+        // Si la respuesta tiene la forma { cuadres: [...] }
+        if (Array.isArray(result.cuadres)) {
+          for (const cuadre of result.cuadres) {
+            balances.push({
+              machineId: machine.id,
+              startDate: cuadre.fecha_inicio,
+              endDate: cuadre.fecha_fin,
+              initialIn: cuadre.total_in ?? 0,
+              finalIn: cuadre.total_in ?? 0,
+              initialOut: cuadre.total_out ?? 0,
+              finalOut: cuadre.total_out ?? 0,
+              totalJackpot: cuadre.total_jackpot ?? 0,
+              totalBilletero: cuadre.total_billetero ?? 0,
+              playedCredits: 0,
+              playedMoney: 0,
+              netProfit: cuadre.utilidad ?? 0,
+              denomination: machine.denomination ?? 0,
+            });
+          }
+        } else {
+          // Fallback por si la respuesta es un solo cuadre
+          balances.push({
+            machineId: machine.id,
+            startDate: result.fecha_inicio ?? startDateStr,
+            endDate: result.fecha_fin ?? endDateStr,
+            initialIn: result.total_in ?? 0,
+            finalIn: result.total_in ?? 0,
+            initialOut: result.total_out ?? 0,
+            finalOut: result.total_out ?? 0,
+            totalJackpot: result.total_jackpot ?? 0,
+            totalBilletero: result.total_billetero ?? 0,
+            playedCredits: 0,
+            playedMoney: 0,
+            netProfit: result.utilidad ?? ((result.total_in ?? 0) - (result.total_out ?? 0)),
+            denomination: machine.denomination ?? 0,
+          });
+        }
       } catch (error) {
         console.error(error);
       }
@@ -442,10 +464,14 @@ export default function MachineBalancePage() {
                 <TableRow>
                   <TableHead>Máquina</TableHead>
                   <TableHead>Ubicación</TableHead>
+                  <TableHead>Fecha Inicial</TableHead>
+                  <TableHead>Fecha Final</TableHead>
                   <TableHead className="text-right">IN Inicial</TableHead>
                   <TableHead className="text-right">IN Final</TableHead>
                   <TableHead className="text-right">OUT Inicial</TableHead>
                   <TableHead className="text-right">OUT Final</TableHead>
+                  <TableHead className="text-right">Jackpot</TableHead>
+                  <TableHead className="text-right">Billetero</TableHead>
                   <TableHead className="text-right">Créditos</TableHead>
                   <TableHead className="text-right">Ganancia</TableHead>
                 </TableRow>
@@ -454,7 +480,7 @@ export default function MachineBalancePage() {
                 {machineBalances.map((balance) => {
                   const machine = machines.find(m => m.id === balance.machineId);
                   return (
-                    <TableRow key={balance.machineId}>
+                    <TableRow key={`${balance.machineId}-${balance.startDate}-${balance.endDate}`}>
                       <TableCell>
                         <div className="font-medium">{getMachineName(balance.machineId)}</div>
                         <div className="text-muted-foreground">{balance.machineId}</div>
@@ -462,10 +488,14 @@ export default function MachineBalancePage() {
                       <TableCell>
                         {machine ? getLocationName(machine.locationId) : "Desconocida"}
                       </TableCell>
+                      <TableCell>{balance.startDate}</TableCell>
+                      <TableCell>{balance.endDate}</TableCell>
                       <TableCell className="text-right">{balance.initialIn.toLocaleString()}</TableCell>
                       <TableCell className="text-right">{balance.finalIn.toLocaleString()}</TableCell>
                       <TableCell className="text-right">{balance.initialOut.toLocaleString()}</TableCell>
                       <TableCell className="text-right">{balance.finalOut.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{balance.totalJackpot.toLocaleString()}</TableCell>
+                      <TableCell className="text-right">{balance.totalBilletero.toLocaleString()}</TableCell>
                       <TableCell className="text-right">{balance.playedCredits.toLocaleString()}</TableCell>
                       <TableCell className="text-right">
                         <Badge 
