@@ -102,7 +102,7 @@ export default function MainPage() {
       <div>
         <h1 className="text-3xl font-bold text-primary">Menú Principal</h1>
         <p className="text-muted-foreground">
-          Bienvenido al sistema CUADRE CASINO
+          Bienvenido al sistema
         </p>
       </div>
 
