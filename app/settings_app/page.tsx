@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { useRouter } from "next/navigation"
+import { Switch } from "@/components/ui/switch"
 
 export default function ConfiguracionPage() {
   const [nombreApp, setNombreApp] = useState("")
@@ -17,6 +18,7 @@ export default function ConfiguracionPage() {
   const [archivoLogo, setArchivoLogo] = useState<File | null>(null)
   const [colorPrimario, setColorPrimario] = useState("#1d4ed8")
   const [colorFondo, setColorFondo] = useState("#ffffff")
+  const [modoMantenimiento, setModoMantenimiento] = useState(false)
   const [cargando, setCargando] = useState(true)
   const router = useRouter()
 
@@ -33,6 +35,7 @@ export default function ConfiguracionPage() {
         setColorPrimario(data.color_primario || "#1d4ed8")
         setColorFondo(data.color_fondo || "#ffffff")
         setLogoPreview(`http://localhost:8000${data.logo_url || ""}`)
+        setModoMantenimiento(data.modo_mantenimiento || false)
       } catch (error) {
         console.error("Error al cargar configuración:", error)
       } finally {
@@ -53,6 +56,7 @@ export default function ConfiguracionPage() {
       formData.append("correo", correo)
       formData.append("color_primario", colorPrimario)
       formData.append("color_fondo", colorFondo)
+      formData.append("modo_mantenimiento", String(modoMantenimiento))
       if (archivoLogo) {
         formData.append("logo", archivoLogo)
       }
@@ -92,7 +96,6 @@ export default function ConfiguracionPage() {
           <CardTitle>Configuración del sistema</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-6">
-
           <div>
             <Label>NIT</Label>
             <Input value={nit} onChange={(e) => setNit(e.target.value)} required />
@@ -156,6 +159,19 @@ export default function ConfiguracionPage() {
             {logoPreview && (
               <img src={logoPreview} alt="Logo" className="h-10" />
             )}
+          </div>
+
+          <div className="flex items-center justify-between border p-3 rounded">
+            <div>
+              <h4 className="font-medium">Modo Mantenimiento</h4>
+              <p className="text-sm text-muted-foreground">
+                Al activarlo, el sistema se desactiva temporalmente.
+                <br /><br /> 
+                Para desactivarlo, debes hacer una petecion a http://localhost:8000/modo-mantenimiento-off?clave=admin123
+                <br /><br />O poner ("modo_mantenimiento": false) en Json de configuracion.
+              </p>
+            </div>
+            <Switch checked={modoMantenimiento} onCheckedChange={setModoMantenimiento} />
           </div>
 
           <div className="flex justify-end gap-2">

@@ -53,7 +53,7 @@ export default function EditarMaquinaPage() {
         setDenominacion(maquina.denominacion.toString())
         setCasino(maquina.casino)
 
-        const resLugares = await fetch("http://localhost:8000/lugares")
+        const resLugares = await fetch("http://localhost:8000/listar-lugares")
         const data = await resLugares.json()
         const lista = Array.isArray(data)
           ? data

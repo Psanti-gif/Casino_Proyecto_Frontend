@@ -4,7 +4,10 @@ import { Providers } from './providers'
 import { Toaster } from '@/components/ui/toaster'
 import Header from '@/components/Header'
 import Sidebar from '@/components/Sidebar'
-import Footer from '@/components/Footer' // ✅ nuevo
+import Footer from '@/components/Footer'
+
+// 👇 Importa directamente la página de mantenimiento
+import MaintenancePage from './maintenance/page'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,7 +23,8 @@ export default async function RootLayout({
 }) {
   let config = {
     color_primario: '#1d4ed8',
-    color_fondo: '#ffffff'
+    color_fondo: '#ffffff',
+    modo_mantenimiento: false
   }
 
   try {
@@ -30,10 +34,23 @@ export default async function RootLayout({
     const data = await res.json()
     config.color_primario = data.color_primario || '#1d4ed8'
     config.color_fondo = data.color_fondo || '#ffffff'
+    config.modo_mantenimiento = data.modo_mantenimiento || false
   } catch (error) {
-    console.error("No se pudo cargar configuración de colores", error)
+    console.error("No se pudo cargar configuración", error)
   }
 
+  // ✅ Si está activado el modo mantenimiento, renderiza la página completa
+  if (config.modo_mantenimiento) {
+    return (
+      <html lang="es">
+        <body className={inter.className}>
+          <MaintenancePage />
+        </body>
+      </html>
+    )
+  }
+
+  // ✅ Renderizado normal si NO está en mantenimiento
   return (
     <html lang="es" suppressHydrationWarning>
       <body
@@ -51,7 +68,7 @@ export default async function RootLayout({
               <main className="flex-1 p-4 md:p-6">
                 {children}
                 <Toaster />
-                <Footer /> {/* ✅ se muestra al final del contenido */}
+                <Footer />
               </main>
             </div>
           </div>

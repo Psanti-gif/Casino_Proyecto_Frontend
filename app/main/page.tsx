@@ -17,13 +17,6 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   {
-    title: "Dashboard",
-    description: "Vista general del sistema",
-    href: "/dashboard",
-    icon: <Gauge className="h-6 w-6" />,
-    roles: ['Admin', 'Support', 'Operator'],
-  },
-  {
     title: "Máquinas",
     description: "Gestión de máquinas",
     href: "/machines",
@@ -35,6 +28,13 @@ const menuItems: MenuItem[] = [
     description: "Gestión de ubicaciones",
     href: "/locations",
     icon: <MapPin className="h-6 w-6" />,
+    roles: ['Admin', 'Support'],
+  },
+  {
+    title: "Encargados",
+    description: "Gestión de encargados de casino",
+    href: "/encargados",
+    icon: <Users className="h-6 w-6" />,
     roles: ['Admin', 'Support'],
   },
   {
@@ -80,6 +80,7 @@ const menuItems: MenuItem[] = [
     roles: ['Support'],
   },
 ]
+
 
 export default function MainPage() {
   const { user } = useAuth()

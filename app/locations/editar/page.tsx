@@ -2,134 +2,154 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem
+} from "@/components/ui/select"
+
+interface Encargado {
+  id: number
+  nombre: string
+  estado: string
+}
 
 export default function EditarLugarPage() {
   const router = useRouter()
-  const params = useSearchParams()
-  const id = params.get("id")
+  const searchParams = useSearchParams()
+  const id = searchParams.get("id")
 
-  const [codigo, setCodigo] = useState("")
-  const [nombreCasino, setNombreCasino] = useState("")
-  const [ciudad, setCiudad] = useState("")
-  const [direccion, setDireccion] = useState("")
-  const [telefono, setTelefono] = useState("")
-  const [encargado, setEncargado] = useState("")
+  const [formulario, setFormulario] = useState({
+    codigo: "",
+    nombre_casino: "",
+    ciudad: "",
+    direccion: "",
+    telefono: "",
+    persona_encargada: "",
+    estado: "Activo"
+  })
+
+  const [encargados, setEncargados] = useState<Encargado[]>([])
   const [mensaje, setMensaje] = useState("")
-  const [cargando, setCargando] = useState(false)
+
+  const cargarLugar = async () => {
+    if (!id) return
+    const res = await fetch(`http://localhost:8000/buscar-lugar-id/${id}`)
+    const data = await res.json()
+    if (data?.mensaje) {
+      alert(data.mensaje)
+      router.push("/locations")
+    } else {
+      setFormulario(data)
+    }
+  }
+
+  const cargarEncargados = async () => {
+    const res = await fetch("http://localhost:8000/listar-encargados")
+    const data = await res.json()
+    const activos = data.filter((e: Encargado) => e.estado === "Activo")
+    setEncargados(activos)
+  }
 
   useEffect(() => {
-    if (!id) return
-
-    const obtenerLugar = async () => {
-      try {
-        const res = await fetch("http://localhost:8000/listar-lugares")
-        const data = await res.json()
-        const lugar = data.find((l: any) => l.id === parseInt(id))
-        if (lugar) {
-          setCodigo(lugar.codigo)
-          setNombreCasino(lugar.nombre_casino)
-          setCiudad(lugar.ciudad)
-          setDireccion(lugar.direccion)
-          setTelefono(lugar.telefono)
-          setEncargado(lugar.persona_encargada)
-        } else {
-          setMensaje("Lugar no encontrado")
-        }
-      } catch (error) {
-        setMensaje("Error al obtener el lugar")
-      }
-    }
-
-    obtenerLugar()
+    cargarLugar()
+    cargarEncargados()
   }, [id])
 
-  const handleActualizar = async () => {
-    setMensaje("")
-    if (!codigo || !nombreCasino || !ciudad || !direccion || !telefono || !encargado) {
-      setMensaje("Todos los campos son obligatorios.")
-      return
-    }
+  const handleChange = (campo: string, valor: string) => {
+    setFormulario(prev => ({ ...prev, [campo]: valor }))
+  }
 
-    setCargando(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
     try {
       const res = await fetch(`http://localhost:8000/editar-lugar/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          codigo,
-          nombre_casino: nombreCasino,
-          ciudad,
-          direccion,
-          telefono,
-          persona_encargada: encargado
-        }),
+        body: JSON.stringify(formulario)
       })
-
       const data = await res.json()
       if (res.ok) {
-        alert(data.mensaje || "Lugar actualizado correctamente")
+        alert("Casino actualizado correctamente")
         router.push("/locations")
       } else {
-        setMensaje(data.detail || "Error al actualizar el lugar")
+        setMensaje(data.detail || "Error al actualizar")
       }
-    } catch (error) {
-      setMensaje("Error de red")
-    } finally {
-      setCargando(false)
+    } catch {
+      setMensaje("Error de red o servidor")
     }
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10">
-      <div className="mb-4">
-        <Button variant="outline" onClick={() => router.push("/locations")}>
-          ← Volver
-        </Button>
-      </div>
+    <div className="max-w-xl mx-auto mt-10">
+      <Button variant="outline" className="mb-4" onClick={() => router.push("/locations")}>
+        ← Volver
+      </Button>
+
       <Card>
         <CardHeader className="text-primary">
           <CardTitle>Editar Casino</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="codigo">Código</Label>
-            <Input id="codigo" value={codigo} disabled />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="nombre">Nombre del Casino</Label>
-            <Input id="nombre" value={nombreCasino} onChange={(e) => setNombreCasino(e.target.value)} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="ciudad">Ciudad</Label>
-            <Input id="ciudad" value={ciudad} onChange={(e) => setCiudad(e.target.value)} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="direccion">Dirección</Label>
-            <Input id="direccion" value={direccion} onChange={(e) => setDireccion(e.target.value)} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="telefono">Teléfono</Label>
-            <Input id="telefono" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="encargado">Persona Encargada</Label>
-            <Input id="encargado" value={encargado} onChange={(e) => setEncargado(e.target.value)} />
-          </div>
-
-          {mensaje && <p className="text-sm text-red-500">{mensaje}</p>}
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => router.push("/locations")}>
-              Cancelar
-            </Button>
-            <Button onClick={handleActualizar} disabled={cargando}>
-              Guardar cambios
-            </Button>
-          </div>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid gap-4">
+            <div>
+              <Label className="text-sm">Código</Label>
+              <Input value={formulario.codigo} onChange={(e) => handleChange("codigo", e.target.value)} disabled />
+            </div>
+            <div>
+              <Label className="text-sm">Nombre del Casino</Label>
+              <Input value={formulario.nombre_casino} onChange={(e) => handleChange("nombre_casino", e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm">Ciudad</Label>
+              <Input value={formulario.ciudad} onChange={(e) => handleChange("ciudad", e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm">Dirección</Label>
+              <Input value={formulario.direccion} onChange={(e) => handleChange("direccion", e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm">Teléfono</Label>
+              <Input value={formulario.telefono} onChange={(e) => handleChange("telefono", e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-sm">Persona Encargada</Label>
+              <Select value={formulario.persona_encargada} onValueChange={(v) => handleChange("persona_encargada", v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar encargado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {encargados.map((e) => (
+                    <SelectItem key={e.id} value={e.nombre}>
+                      {e.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm">Estado</Label>
+              <Select value={formulario.estado} onValueChange={(v) => handleChange("estado", v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Activo">Activo</SelectItem>
+                  <SelectItem value="Inactivo">Inactivo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {mensaje && <p className="text-sm text-red-500">{mensaje}</p>}
+            <div className="flex justify-end gap-2 mt-4">
+              <Button type="button" variant="outline" onClick={() => router.push("/locations")}>
+                Cancelar
+              </Button>
+              <Button type="submit">Guardar Cambios</Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
