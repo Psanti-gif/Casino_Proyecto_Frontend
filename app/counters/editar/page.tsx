@@ -7,13 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent
-} from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { Calendar as CalendarIcon } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 export default function EditarContadorPage() {
   const searchParams = useSearchParams()
@@ -62,14 +56,6 @@ export default function EditarContadorPage() {
     setDatos({ ...datos, [name]: type === "checkbox" ? checked : value })
   }
 
-  const formatearFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
-    })
-  }
-
   const guardar = async () => {
     setMensaje("")
     const res = await fetch("http://localhost:8000/modificar", {
@@ -96,38 +82,27 @@ export default function EditarContadorPage() {
 
   return (
     <div className="max-w-2xl mx-auto mt-8">
+      <div className="mb-4">
+        <Button variant="outline" onClick={() => router.push("/counters")}>
+          <ArrowLeft className="h-4 w-4 mr-2" /> Volver
+        </Button>
+      </div>
+
       <Card>
         <CardHeader className="text-primary">
           <CardTitle>Editar Contador</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
-          {/* FECHA (desplegable) */}
-          <div className="flex flex-col gap-2">
+          {/* Fecha como input tipo date */}
+          <div>
             <Label>Fecha</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {datos.fecha ? formatearFecha(datos.fecha) : "Selecciona una fecha"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={datos.fecha ? new Date(datos.fecha) : undefined}
-                  onSelect={(date) => {
-                    if (date) {
-                      const iso = date.toISOString().split("T")[0]
-                      setDatos({ ...datos, fecha: iso })
-                    }
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Input
+              type="date"
+              name="fecha"
+              value={datos.fecha}
+              onChange={(e) => setDatos({ ...datos, fecha: e.target.value })}
+              max={new Date().toISOString().split("T")[0]}
+            />
           </div>
 
           <div>
@@ -204,3 +179,4 @@ export default function EditarContadorPage() {
     </div>
   )
 }
+
