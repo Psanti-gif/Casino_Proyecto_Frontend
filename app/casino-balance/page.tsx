@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -15,6 +15,8 @@ import { Calendar } from "@/components/ui/calendar"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { ArrowRight, Calendar as CalendarIcon, FilterX, Calculator, FileDown, FileText, ArrowLeft, BarChart2 } from "lucide-react"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
 
 interface Location {
   id: string
@@ -115,7 +117,37 @@ export default function CasinoBalancePage() {
   }
 
   const exportarPDF = () => {
-    window.print()
+    const doc = new jsPDF()
+    doc.setFontSize(14)
+    doc.text(`Balance por Casino: ${casino}`, 14, 15)
+
+    autoTable(doc, {
+      startY: 25,
+      head: [[
+        "Máquina", "Inicio", "Fin",
+        "IN", "OUT", "JACKPOT", "BILLETERO", "UTILIDAD"
+      ]],
+      body: detalles.map(r => [
+        r.maquina,
+        r.fecha_inicio,
+        r.fecha_fin,
+        r.total_in.toLocaleString(),
+        r.total_out.toLocaleString(),
+        r.total_jackpot.toLocaleString(),
+        r.total_billetero.toLocaleString(),
+        r.utilidad.toLocaleString("es-CO", { style: "currency", currency: "COP" }),
+      ]),
+      foot: [[
+        "TOTALES", "", "",
+        totales?.total_in.toLocaleString() ?? 0,
+        totales?.total_out.toLocaleString() ?? 0,
+        totales?.total_jackpot.toLocaleString() ?? 0,
+        totales?.total_billetero.toLocaleString() ?? 0,
+        totales?.utilidad_total.toLocaleString("es-CO", { style: "currency", currency: "COP" }) ?? 0
+      ]]
+    })
+
+    doc.save(`Balance_Casino_${casino}.pdf`)
   }
 
   return (
@@ -211,6 +243,8 @@ export default function CasinoBalancePage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Máquina</TableHead>
+                  <TableHead>Inicio</TableHead>
+                  <TableHead>Fin</TableHead>
                   <TableHead>IN</TableHead>
                   <TableHead>OUT</TableHead>
                   <TableHead>JACKPOT</TableHead>
@@ -222,6 +256,8 @@ export default function CasinoBalancePage() {
                 {detalles.map((r, i) => (
                   <TableRow key={i}>
                     <TableCell>{r.maquina}</TableCell>
+                    <TableCell>{r.fecha_inicio}</TableCell>
+                    <TableCell>{r.fecha_fin}</TableCell>
                     <TableCell>{r.total_in.toLocaleString()}</TableCell>
                     <TableCell>{r.total_out.toLocaleString()}</TableCell>
                     <TableCell>{r.total_jackpot.toLocaleString()}</TableCell>
@@ -238,6 +274,7 @@ export default function CasinoBalancePage() {
                 ))}
                 <TableRow className="font-bold bg-muted">
                   <TableCell>Total</TableCell>
+                  <TableCell colSpan={2}></TableCell>
                   <TableCell>{totales.total_in.toLocaleString()}</TableCell>
                   <TableCell>{totales.total_out.toLocaleString()}</TableCell>
                   <TableCell>{totales.total_jackpot.toLocaleString()}</TableCell>
