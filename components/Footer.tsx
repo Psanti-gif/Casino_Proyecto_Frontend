@@ -8,6 +8,7 @@ export default function Footer() {
   const [nit, setNit] = useState("")
   const [correo, setCorreo] = useState("")
   const [empresa, setEmpresa] = useState("CUADRE CASINO")
+  const [colorFondo, setColorFondo] = useState("")
 
   const version = "1.0.0"
   const sede = "Medellín"
@@ -23,6 +24,7 @@ export default function Footer() {
         setNit(data.nit || "")
         setCorreo(data.correo || "")
         setEmpresa(data.nombre_empresa || "CUADRE CASINO")
+        setColorFondo(data.background_color || "")  // <-- color de fondo personalizado
       } catch (error) {
         console.error("Error al cargar configuración del footer:", error)
       }
@@ -32,7 +34,10 @@ export default function Footer() {
   }, [])
 
   return (
-    <footer className="border-t mt-10 bg-background py-4 px-4 text-xs text-muted-foreground">
+    <footer
+      style={{ backgroundColor: colorFondo }}
+      className="border-t mt-10 py-4 px-4 text-xs text-muted-foreground"
+    >
       <div className="container mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-6">
 
         {/* IZQUIERDA */}
@@ -62,3 +67,4 @@ export default function Footer() {
     </footer>
   )
 }
+

@@ -1,11 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem
+} from "@/components/ui/select"
+
+interface Encargado {
+  id: number
+  nombre: string
+  estado: string
+}
 
 export default function CrearLugarPage() {
   const router = useRouter()
@@ -16,8 +25,24 @@ export default function CrearLugarPage() {
   const [direccion, setDireccion] = useState("")
   const [telefono, setTelefono] = useState("")
   const [encargado, setEncargado] = useState("")
+  const [encargados, setEncargados] = useState<Encargado[]>([])
   const [mensaje, setMensaje] = useState("")
   const [cargando, setCargando] = useState(false)
+
+  const cargarEncargados = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/listar-encargados")
+      const data = await res.json()
+      const activos = data.filter((e: Encargado) => e.estado === "Activo")
+      setEncargados(activos)
+    } catch {
+      setMensaje("Error al cargar encargados")
+    }
+  }
+
+  useEffect(() => {
+    cargarEncargados()
+  }, [])
 
   const handleGuardar = async () => {
     setMensaje("")
@@ -90,7 +115,18 @@ export default function CrearLugarPage() {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="encargado">Persona Encargada</Label>
-            <Input id="encargado" value={encargado} onChange={(e) => setEncargado(e.target.value)} />
+            <Select value={encargado} onValueChange={(v) => setEncargado(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccionar encargado" />
+              </SelectTrigger>
+              <SelectContent>
+                {encargados.map((e) => (
+                  <SelectItem key={e.id} value={e.nombre}>
+                    {e.nombre}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {mensaje && <p className="text-sm text-red-500">{mensaje}</p>}
