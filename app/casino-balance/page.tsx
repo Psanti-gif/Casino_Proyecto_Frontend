@@ -154,7 +154,7 @@ export default function CasinoBalancePage() {
     <div className="flex flex-col gap-5">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Balance por Casino</h1>
+          <h1 className="text-3xl font-bold">Balnce por Casino</h1>
           <p className="text-muted-foreground">Resumen consolidado por casino en un rango de fechas</p>
         </div>
         <Button variant="outline" onClick={() => router.push("/")}>
