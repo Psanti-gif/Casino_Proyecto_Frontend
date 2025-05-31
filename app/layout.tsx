@@ -61,16 +61,16 @@ export default async function RootLayout({
         }}
       >
         <Providers>
-          <div className="min-h-screen">
+          <div className="min-h-screen flex flex-col">
             <Header />
-            <div className="flex">
+            <div className="flex flex-1">
               <Sidebar />
-              <main className="flex-1 p-4 md:p-6">
+              <main className="flex-1 p-4 md:p-6 flex flex-col">
                 {children}
                 <Toaster />
-                <Footer />
               </main>
             </div>
+            <Footer />
           </div>
         </Providers>
       </body>

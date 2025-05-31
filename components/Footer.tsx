@@ -36,7 +36,7 @@ export default function Footer() {
   return (
     <footer
       style={{ backgroundColor: colorFondo }}
-      className="border-t mt-10 py-4 px-4 text-xs text-muted-foreground"
+      className="border-t mt-10 py-2 px-4 text-xs text-muted-foreground"
     >
       <div className="container mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-6">
 

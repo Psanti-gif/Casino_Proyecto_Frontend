@@ -99,28 +99,30 @@ export default function MainPage() {
   )
 
   return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">Menú Principal</h1>
-        <p className="text-muted-foreground">
+    <div className="container mx-auto px-4 flex flex-col items-center flex-1 py-12">
+      <div className="mb-4 text-center w-full">
+        <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">Menú Principal</h1>
+        <p className="text-muted-foreground text-base md:text-lg">
           Bienvenido al sistema
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredMenuItems.map((item, index) => (
-          <Link key={index} href={item.href}>
-            <Card className="hover:bg-accent/50 transition-colors">
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  {item.icon}
-                  <CardTitle className="text-primary">{item.title}</CardTitle>
-                </div>
-                <CardDescription>{item.description}</CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-        ))}
+      <div className="w-full flex justify-center">
+        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-5xl w-full">
+          {filteredMenuItems.map((item, index) => (
+            <Link key={index} href={item.href} className="block h-full">
+              <Card className="hover:bg-accent/50 transition-colors h-full w-full min-w-0 sm:min-w-[220px] sm:max-w-full">
+                <CardHeader className="h-full">
+                  <div className="flex items-center gap-3">
+                    {item.icon}
+                    <CardTitle className="text-primary text-lg md:text-xl">{item.title}</CardTitle>
+                  </div>
+                  <CardDescription className="text-sm md:text-base">{item.description}</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   )
