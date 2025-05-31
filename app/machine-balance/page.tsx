@@ -24,10 +24,11 @@ import {
   PopoverContent, 
   PopoverTrigger
 } from "@/components/ui/popover"
-import { FilterX, BarChart2, Calendar, ArrowRight, Calculator, FileDown } from "lucide-react"
+import { FilterX, BarChart2, Calendar, ArrowRight, ArrowLeft, Calculator, FileDown, FileText } from "lucide-react"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { formatDate, formatCurrency } from "@/lib/utils"
 import { Machine, Location, MachineBalance } from "@/types"
+import { useRouter } from "next/navigation"
 
 // Elimina sampleCounterRecords y calculateMachineBalance
 
@@ -41,6 +42,7 @@ export default function MachineBalancePage() {
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loadingLocations, setLoadingLocations] = useState<boolean>(true);
   const [loadingMachines, setLoadingMachines] = useState<boolean>(true);
+  const router = useRouter();
 
   type ApiLocation = {
     id: number;
@@ -144,8 +146,6 @@ export default function MachineBalancePage() {
       "OUT Final",
       "Jackpot Total",
       "Billetero Total",
-      "Créditos Jugados",
-      "Dinero Jugado",
       "Ganancia Neta",
       "Denominación",
     ];
@@ -170,8 +170,6 @@ export default function MachineBalancePage() {
         balance.finalOut,
         balance.totalJackpot,
         balance.totalBilletero,
-        balance.playedCredits,
-        balance.playedMoney.toFixed(2),
         balance.netProfit.toFixed(2),
         balance.denomination.toFixed(2),
       ];
@@ -266,16 +264,22 @@ export default function MachineBalancePage() {
           for (const cuadre of result.cuadres) {
             balances.push({
               machineId: machine.id,
+              machineName: machineName,
+              casino: casinoName,
               startDate: cuadre.fecha_inicio,
               endDate: cuadre.fecha_fin,
-              initialIn: cuadre.total_in ?? 0,
-              finalIn: cuadre.total_in ?? 0,
-              initialOut: cuadre.total_out ?? 0,
-              finalOut: cuadre.total_out ?? 0,
+              initialIn: cuadre.contador_inicial?.in ?? 0,
+              finalIn: cuadre.contador_final?.in ?? 0,
+              totalIn: cuadre.total_in ?? 0,
+              initialOut: cuadre.contador_inicial?.out ?? 0,
+              finalOut: cuadre.contador_final?.out ?? 0,
+              totalOut: cuadre.total_out ?? 0,
+              initialJackpot: cuadre.contador_inicial?.jackpot ?? 0,
+              finalJackpot: cuadre.contador_final?.jackpot ?? 0,
               totalJackpot: cuadre.total_jackpot ?? 0,
+              initialBilletero: cuadre.contador_inicial?.billetero ?? 0,
+              finalBilletero: cuadre.contador_final?.billetero ?? 0,
               totalBilletero: cuadre.total_billetero ?? 0,
-              playedCredits: 0,
-              playedMoney: 0,
               netProfit: cuadre.utilidad ?? 0,
               denomination: machine.denomination ?? 0,
             });
@@ -284,16 +288,22 @@ export default function MachineBalancePage() {
           // Fallback por si la respuesta es un solo cuadre
           balances.push({
             machineId: machine.id,
+            machineName: machineName,
+            casino: casinoName,
             startDate: result.fecha_inicio ?? startDateStr,
             endDate: result.fecha_fin ?? endDateStr,
             initialIn: result.total_in ?? 0,
             finalIn: result.total_in ?? 0,
+            totalIn: result.total_in ?? 0,
             initialOut: result.total_out ?? 0,
             finalOut: result.total_out ?? 0,
+            totalOut: result.total_out ?? 0,
+            initialJackpot: 0,
+            finalJackpot: 0,
             totalJackpot: result.total_jackpot ?? 0,
+            initialBilletero: 0,
+            finalBilletero: 0,
             totalBilletero: result.total_billetero ?? 0,
-            playedCredits: 0,
-            playedMoney: 0,
             netProfit: result.utilidad ?? ((result.total_in ?? 0) - (result.total_out ?? 0)),
             denomination: machine.denomination ?? 0,
           });
@@ -306,13 +316,93 @@ export default function MachineBalancePage() {
     setMachineBalances(balances);
   };
   
+  // Exportar a Excel (CSV)
+  const exportarExcel = () => {
+    if (machineBalances.length === 0) return;
+    const headers = [
+      "Máquina", "Ubicación", "Fecha Inicial", "Fecha Final",
+      "IN Inicial", "IN Final", "IN Total",
+      "OUT Inicial", "OUT Final", "OUT Total",
+      "Jackpot Inicial", "Jackpot Final", "Jackpot Total",
+      "Billetero Inicial", "Billetero Final", "Billetero Total",
+      "Ganancia", "Denominación"
+    ];
+    const csvRows = [headers.join(",")];
+    for (const balance of machineBalances) {
+      csvRows.push([
+        `"${balance.machineName}"`,
+        `"${balance.casino}"`,
+        balance.startDate,
+        balance.endDate,
+        balance.initialIn,
+        balance.finalIn,
+        balance.totalIn,
+        balance.initialOut,
+        balance.finalOut,
+        balance.totalOut,
+        balance.initialJackpot,
+        balance.finalJackpot,
+        balance.totalJackpot,
+        balance.initialBilletero,
+        balance.finalBilletero,
+        balance.totalBilletero,
+        balance.netProfit,
+        balance.denomination
+      ].join(","));
+    }
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `machine-balance-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+  // Exportar a PDF (simple print)
+  const exportarPDF = () => {
+    window.print();
+  };
+  
+  // Guardar cuadre en backend
+  const guardarCuadre = async () => {
+    if (machineBalances.length === 0) return;
+    try {
+      const cuadres = machineBalances.map(balance => ({
+        utilidad: balance.netProfit,
+        total_in: balance.totalIn,
+        total_out: balance.totalOut,
+        total_jackpot: balance.totalJackpot,
+        total_billetero: balance.totalBilletero,
+        maquina: balance.machineName,
+        casino: balance.casino,
+        fecha_inicio: balance.startDate,
+        fecha_fin: balance.endDate,
+      }));
+      const response = await fetch("http://127.0.0.1:8000/guardar_utilidad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cuadres),
+      });
+      if (!response.ok) throw new Error("Error al guardar el cuadre");
+      alert("Cuadre guardado correctamente.");
+    } catch (error) {
+      alert("Error al guardar el cuadre.");
+      console.error(error);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-3xl font-bold">Balance por Máquina</h1>
-        <p className="text-muted-foreground">
-          Consulta el balance de ganancias por máquina en un período específico
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Balance por Máquina</h1>
+          <p className="text-muted-foreground">Consulta el balance de ganancias por máquina en un período específico</p>
+        </div>
+        <Button variant="outline" onClick={() => router.push("/")}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Volver
+        </Button>
       </div>
       
       <Card>
@@ -452,11 +542,19 @@ export default function MachineBalancePage() {
                 ({formatDateString(startDate)} <ArrowRight className="inline h-3 w-3 mx-1" /> {formatDateString(endDate)})
               </span>
             </CardTitle>
-            
-            <Button variant="outline" size="sm" onClick={handleExportCSV}>
-              <FileDown className="mr-2 h-4 w-4" />
-              Exportar CSV
-            </Button>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" size="sm" onClick={guardarCuadre}>
+                Guardar cuadre
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportarExcel}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportarPDF}>
+                <FileText className="mr-2 h-4 w-4" />
+                PDF
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
@@ -468,46 +566,51 @@ export default function MachineBalancePage() {
                   <TableHead>Fecha Final</TableHead>
                   <TableHead className="text-right">IN Inicial</TableHead>
                   <TableHead className="text-right">IN Final</TableHead>
+                  <TableHead className="text-right">IN Total</TableHead>
                   <TableHead className="text-right">OUT Inicial</TableHead>
                   <TableHead className="text-right">OUT Final</TableHead>
-                  <TableHead className="text-right">Jackpot</TableHead>
-                  <TableHead className="text-right">Billetero</TableHead>
-                  <TableHead className="text-right">Créditos</TableHead>
-                  <TableHead className="text-right">Ganancia</TableHead>
+                  <TableHead className="text-right">OUT Total</TableHead>
+                  <TableHead className="text-right">Jackpot Inicial</TableHead>
+                  <TableHead className="text-right">Jackpot Final</TableHead>
+                  <TableHead className="text-right">Jackpot Total</TableHead>
+                  <TableHead className="text-right">Billetero Inicial</TableHead>
+                  <TableHead className="text-right">Billetero Final</TableHead>
+                  <TableHead className="text-right">Billetero Total</TableHead>
+                  <TableHead className="text-right">Utilidad Final</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {machineBalances.map((balance) => {
-                  const machine = machines.find(m => m.id === balance.machineId);
-                  return (
-                    <TableRow key={`${balance.machineId}-${balance.startDate}-${balance.endDate}`}>
-                      <TableCell>
-                        <div className="font-medium">{getMachineName(balance.machineId)}</div>
-                        <div className="text-muted-foreground">{balance.machineId}</div>
-                      </TableCell>
-                      <TableCell>
-                        {machine ? getLocationName(machine.locationId) : "Desconocida"}
-                      </TableCell>
-                      <TableCell>{balance.startDate}</TableCell>
-                      <TableCell>{balance.endDate}</TableCell>
-                      <TableCell className="text-right">{balance.initialIn.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{balance.finalIn.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{balance.initialOut.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{balance.finalOut.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{balance.totalJackpot.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{balance.totalBilletero.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{balance.playedCredits.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">
-                        <Badge 
-                          variant={balance.netProfit >= 0 ? "success" : "destructive"}
-                          className="justify-center w-24"
-                        >
-                          {formatCurrency(balance.netProfit)}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                {machineBalances.map((balance) => (
+                  <TableRow key={`${balance.machineId}-${balance.startDate}-${balance.endDate}`}>
+                    <TableCell>
+                      <div className="font-medium">{balance.machineName}</div>
+                      <div className="text-muted-foreground">{balance.machineId}</div>
+                    </TableCell>
+                    <TableCell>{balance.casino}</TableCell>
+                    <TableCell>{balance.startDate}</TableCell>
+                    <TableCell>{balance.endDate}</TableCell>
+                    <TableCell className="text-right">{balance.initialIn}</TableCell>
+                    <TableCell className="text-right">{balance.finalIn}</TableCell>
+                    <TableCell className="text-right">{balance.totalIn}</TableCell>
+                    <TableCell className="text-right">{balance.initialOut}</TableCell>
+                    <TableCell className="text-right">{balance.finalOut}</TableCell>
+                    <TableCell className="text-right">{balance.totalOut}</TableCell>
+                    <TableCell className="text-right">{balance.initialJackpot}</TableCell>
+                    <TableCell className="text-right">{balance.finalJackpot}</TableCell>
+                    <TableCell className="text-right">{balance.totalJackpot}</TableCell>
+                    <TableCell className="text-right">{balance.initialBilletero}</TableCell>
+                    <TableCell className="text-right">{balance.finalBilletero}</TableCell>
+                    <TableCell className="text-right">{balance.totalBilletero}</TableCell>
+                    <TableCell className="text-right">
+                      <Badge 
+                        variant={balance.netProfit >= 0 ? "success" : "destructive"}
+                        className="justify-center w-24"
+                      >
+                        {formatCurrency(balance.netProfit)}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </CardContent>
