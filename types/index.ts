@@ -86,18 +86,24 @@ export interface ReportFilter {
 }
 
 // Machine Balance type (calculated)
-export interface MachineBalance {
+export type MachineBalance = {
   machineId: string;
+  machineName: string;
+  casino: string;
   startDate: string;
   endDate: string;
   initialIn: number;
   finalIn: number;
+  totalIn: number;
   initialOut: number;
   finalOut: number;
+  totalOut: number;
+  initialJackpot: number;
+  finalJackpot: number;
   totalJackpot: number;
+  initialBilletero: number;
+  finalBilletero: number;
   totalBilletero: number;
-  playedCredits: number;
-  playedMoney: number;
   netProfit: number;
   denomination: number;
 }
