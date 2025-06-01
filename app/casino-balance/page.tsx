@@ -20,6 +20,7 @@ export default function CasinoBalancePage() {
   const [casinos, setCasinos] = useState<any[]>([]);
   const [casinoSelected, setCasinoSelected] = useState("all");
   const [resultados, setResultados] = useState<any[]>([]);
+  const [resumenPorCasino, setResumenPorCasino] = useState<any[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -37,6 +38,36 @@ export default function CasinoBalancePage() {
       year: 'numeric',
     });
   };
+
+  const agruparPorCasino = (datos: any[]) => {
+    const agrupado: Record<string, any> = {};
+
+    for (const r of datos) {
+      if (!agrupado[r.casino]) {
+        agrupado[r.casino] = {
+          casino: r.casino,
+          total_in: 0,
+          total_out: 0,
+          total_jackpot: 0,
+          total_billetero: 0,
+          utilidad: 0,
+          maquinas: new Set(),
+        };
+      }
+      agrupado[r.casino].total_in += r.total_in ?? 0;
+      agrupado[r.casino].total_out += r.total_out ?? 0;
+      agrupado[r.casino].total_jackpot += r.total_jackpot ?? 0;
+      agrupado[r.casino].total_billetero += r.total_billetero ?? 0;
+      agrupado[r.casino].utilidad += r.utilidad ?? 0;
+      agrupado[r.casino].maquinas.add(r.maquina);
+    }
+
+    return Object.values(agrupado).map((casino: any) => ({
+      ...casino,
+      maquinas: Array.from(casino.maquinas),
+    }));
+  };
+
   const handleProcesarBalance = async () => {
     if (!startDate || !endDate || casinoSelected === "all") return;
 
@@ -57,87 +88,12 @@ export default function CasinoBalancePage() {
 
       const data = await response.json();
       setResultados(data.detalle_maquinas || []);
+      setResumenPorCasino(agruparPorCasino(data.detalle_maquinas || []));
     } catch (error) {
       console.error(error);
       setResultados([]);
+      setResumenPorCasino([]);
     }
-  };
-
-
-  const guardarCuadre = async () => {
-    if (resultados.length === 0) return;
-  
-    // Usamos la primera máquina como referencia para casino y fechas
-    const referencia = resultados[0];
-  
-    const payload = {
-      casino: referencia.casino,
-      fecha_inicio: referencia.fecha_inicio,
-      fecha_fin: referencia.fecha_fin,
-      totales: {
-        total_in: resultados.reduce((s, r) => s + r.total_in, 0),
-        total_out: resultados.reduce((s, r) => s + r.total_out, 0),
-        total_jackpot: resultados.reduce((s, r) => s + r.total_jackpot, 0),
-        total_billetero: resultados.reduce((s, r) => s + r.total_billetero, 0),
-        utilidad_total: resultados.reduce((s, r) => s + r.utilidad, 0),
-      }
-    };
-  
-    try {
-      const response = await fetch("http://127.0.0.1:8000/guardar-utilidad-casino", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-  
-      if (!response.ok) throw new Error("Error al guardar el cuadre");
-  
-      alert("Cuadre del casino guardado correctamente.");
-    } catch (error) {
-      console.error(error);
-      alert("Error al guardar el cuadre del casino.");
-    }
-  };
-  
-
-  const exportarExcel = () => {
-    if (resultados.length === 0) return;
-
-    const headers = [
-      "Casino", "Máquina", "Fecha Inicial", "Fecha Final",
-      "IN Inicial", "IN Final", "IN Total",
-      "OUT Inicial", "OUT Final", "OUT Total",
-      "Jackpot Inicial", "Jackpot Final", "Jackpot Total",
-      "Billetero Inicial", "Billetero Final", "Billetero Total",
-      "Ganancia"
-    ];
-
-    const rows = resultados.map(r => ([
-      r.casino, r.maquina, r.fecha_inicio, r.fecha_fin,
-      r.contador_inicial?.in ?? 0, r.contador_final?.in ?? 0, r.total_in ?? 0,
-      r.contador_inicial?.out ?? 0, r.contador_final?.out ?? 0, r.total_out ?? 0,
-      r.contador_inicial?.jackpot ?? 0, r.contador_final?.jackpot ?? 0, r.total_jackpot ?? 0,
-      r.contador_inicial?.billetero ?? 0, r.contador_final?.billetero ?? 0, r.total_billetero ?? 0,
-      r.utilidad ?? 0
-    ]));
-
-    const csvContent = [headers, ...rows]
-      .map(row => row.join(","))
-      .join("\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "casino-balance.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const exportarPDF = () => {
-    window.print();
   };
 
   return (
@@ -146,7 +102,7 @@ export default function CasinoBalancePage() {
         <div>
           <h1 className="text-3xl font-bold">Balance por Casino</h1>
           <p className="text-muted-foreground">
-            Consulta el balance de todas las máquinas de un casino en un período específico.
+            Consulta el balance total de cada casino y sus máquinas.
           </p>
         </div>
         <Button variant="outline" onClick={() => router.push("/")}>
@@ -212,6 +168,7 @@ export default function CasinoBalancePage() {
               setEndDate(new Date(2023, 10, 5));
               setCasinoSelected("all");
               setResultados([]);
+              setResumenPorCasino([]);
             }}>
               <FilterX className="mr-2 h-4 w-4" />
               Limpiar filtros
@@ -224,69 +181,41 @@ export default function CasinoBalancePage() {
         </CardContent>
       </Card>
 
-      {resultados.length > 0 && (
+      {resumenPorCasino.length > 0 && (
         <Card>
-          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <CardHeader>
             <CardTitle className="flex items-center">
               <BarChart2 className="mr-2 h-5 w-5" />
-              Resultados <span className="ml-2 text-sm font-normal text-muted-foreground">({formatDateString(startDate)} <ArrowRight className="inline h-3 w-3 mx-1" /> {formatDateString(endDate)})</span>
+              Totales por Casino
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                ({formatDateString(startDate)} <ArrowRight className="inline h-3 w-3 mx-1" /> {formatDateString(endDate)})
+              </span>
             </CardTitle>
-            <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={guardarCuadre}>
-                Guardar cuadre
-              </Button>
-              <Button variant="outline" size="sm" onClick={exportarExcel}>
-                <FileDown className="mr-2 h-4 w-4" /> Excel
-              </Button>
-              <Button variant="outline" size="sm" onClick={exportarPDF}>
-                <FileText className="mr-2 h-4 w-4" /> PDF
-              </Button>
-            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {resultados.map((r, index) => (
-              <div key={index} className="border rounded-lg p-4 bg-muted">
-                <div className="mb-2">
-                  <strong>Máquina:</strong> {r.maquina} | <strong>Casino:</strong> {r.casino}
-                </div>
-                <div className="mb-2">
-                  <strong>Desde:</strong> {r.fecha_inicio} | <strong>Hasta:</strong> {r.fecha_fin}
-                </div>
+            {resumenPorCasino.map((c, i) => (
+              <div key={i} className="border p-4 rounded-lg bg-muted">
+                <h3 className="text-xl font-semibold mb-2">{c.casino}</h3>
+                <p className="text-sm mb-2">Máquinas: {c.maquinas.join(", ")}</p>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-right">IN Inicial</TableHead>
-                      <TableHead className="text-right">IN Final</TableHead>
                       <TableHead className="text-right">IN Total</TableHead>
-                      <TableHead className="text-right">OUT Inicial</TableHead>
-                      <TableHead className="text-right">OUT Final</TableHead>
                       <TableHead className="text-right">OUT Total</TableHead>
-                      <TableHead className="text-right">Jackpot Inicial</TableHead>
-                      <TableHead className="text-right">Jackpot Final</TableHead>
                       <TableHead className="text-right">Jackpot Total</TableHead>
-                      <TableHead className="text-right">Billetero Inicial</TableHead>
-                      <TableHead className="text-right">Billetero Final</TableHead>
                       <TableHead className="text-right">Billetero Total</TableHead>
                       <TableHead className="text-right">Utilidad</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="text-right">{r.contador_inicial?.in ?? 0}</TableCell>
-                      <TableCell className="text-right">{r.contador_final?.in ?? 0}</TableCell>
-                      <TableCell className="text-right">{r.total_in}</TableCell>
-                      <TableCell className="text-right">{r.contador_inicial?.out ?? 0}</TableCell>
-                      <TableCell className="text-right">{r.contador_final?.out ?? 0}</TableCell>
-                      <TableCell className="text-right">{r.total_out}</TableCell>
-                      <TableCell className="text-right">{r.contador_inicial?.jackpot ?? 0}</TableCell>
-                      <TableCell className="text-right">{r.contador_final?.jackpot ?? 0}</TableCell>
-                      <TableCell className="text-right">{r.total_jackpot}</TableCell>
-                      <TableCell className="text-right">{r.contador_inicial?.billetero ?? 0}</TableCell>
-                      <TableCell className="text-right">{r.contador_final?.billetero ?? 0}</TableCell>
-                      <TableCell className="text-right">{r.total_billetero}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(c.total_in)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(c.total_out)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(c.total_jackpot)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(c.total_billetero)}</TableCell>
                       <TableCell className="text-right">
-                        <Badge variant={r.utilidad >= 0 ? "success" : "destructive"}>
-                          {formatCurrency(r.utilidad)}
+                        <Badge variant={c.utilidad >= 0 ? "success" : "destructive"}>
+                          {formatCurrency(c.utilidad)}
                         </Badge>
                       </TableCell>
                     </TableRow>
