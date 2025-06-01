@@ -44,17 +44,20 @@ export default function ReportsPage() {
 
     const res = await fetch(`http://localhost:8000/generar-reporte?${params.toString()}`)
     const data = await res.json()
-    setRegistros(data.registros)
+    const registrosData = Array.isArray(data.registros) ? data.registros : []
+    setRegistros(registrosData)
 
-    const unicos = Array.from(new Set(data.registros.map((r: Registro) => r.casino)))
-    setCasinos(unicos)
+    const unicos = Array.from(new Set(registrosData.map((r: Registro) => r.casino)))
+    setCasinos(unicos as string[])
   }
 
   useEffect(() => {
     cargarDatos()
   }, [fechaInicio, fechaFin, casinoFiltro])
 
-  const utilidadTotal = registros.reduce((acc, r) => acc + r.utilidad, 0)
+  const utilidadTotal = Array.isArray(registros)
+    ? registros.reduce((acc, r) => acc + r.utilidad, 0)
+    : 0
 
   return (
     <div className="flex flex-col gap-5">
