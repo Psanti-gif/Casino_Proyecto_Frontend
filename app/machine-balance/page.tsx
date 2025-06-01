@@ -557,62 +557,68 @@ export default function MachineBalancePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Máquina</TableHead>
-                  <TableHead>Ubicación</TableHead>
-                  <TableHead>Fecha Inicial</TableHead>
-                  <TableHead>Fecha Final</TableHead>
-                  <TableHead className="text-right">IN Inicial</TableHead>
-                  <TableHead className="text-right">IN Final</TableHead>
-                  <TableHead className="text-right">IN Total</TableHead>
-                  <TableHead className="text-right">OUT Inicial</TableHead>
-                  <TableHead className="text-right">OUT Final</TableHead>
-                  <TableHead className="text-right">OUT Total</TableHead>
-                  <TableHead className="text-right">Jackpot Inicial</TableHead>
-                  <TableHead className="text-right">Jackpot Final</TableHead>
-                  <TableHead className="text-right">Jackpot Total</TableHead>
-                  <TableHead className="text-right">Billetero Inicial</TableHead>
-                  <TableHead className="text-right">Billetero Final</TableHead>
-                  <TableHead className="text-right">Billetero Total</TableHead>
-                  <TableHead className="text-right">Utilidad Final</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {machineBalances.map((balance) => (
-                  <TableRow key={`${balance.machineId}-${balance.startDate}-${balance.endDate}`}>
-                    <TableCell>
-                      <div className="font-medium">{balance.machineName}</div>
-                      <div className="text-muted-foreground">{balance.machineId}</div>
-                    </TableCell>
-                    <TableCell>{balance.casino}</TableCell>
-                    <TableCell>{balance.startDate}</TableCell>
-                    <TableCell>{balance.endDate}</TableCell>
-                    <TableCell className="text-right">{balance.initialIn}</TableCell>
-                    <TableCell className="text-right">{balance.finalIn}</TableCell>
-                    <TableCell className="text-right">{balance.totalIn}</TableCell>
-                    <TableCell className="text-right">{balance.initialOut}</TableCell>
-                    <TableCell className="text-right">{balance.finalOut}</TableCell>
-                    <TableCell className="text-right">{balance.totalOut}</TableCell>
-                    <TableCell className="text-right">{balance.initialJackpot}</TableCell>
-                    <TableCell className="text-right">{balance.finalJackpot}</TableCell>
-                    <TableCell className="text-right">{balance.totalJackpot}</TableCell>
-                    <TableCell className="text-right">{balance.initialBilletero}</TableCell>
-                    <TableCell className="text-right">{balance.finalBilletero}</TableCell>
-                    <TableCell className="text-right">{balance.totalBilletero}</TableCell>
-                    <TableCell className="text-right">
-                      <Badge 
-                        variant={balance.netProfit >= 0 ? "success" : "destructive"}
-                        className="justify-center w-24"
-                      >
-                        {formatCurrency(balance.netProfit)}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="flex flex-col gap-8">
+              {machineBalances.map((balance) => (
+                <div key={`${balance.machineId}-${balance.startDate}-${balance.endDate}`} className="border rounded-lg p-4 bg-muted">
+                  {/* Cabecera del cuadre */}
+                  <div className="mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <span className="font-semibold">Casino:</span> {balance.casino} &nbsp;|&nbsp;
+                      <span className="font-semibold">Máquina:</span> {balance.machineName} &nbsp;|&nbsp;
+                      <span className="font-semibold">ID:</span> {balance.machineId}
+                    </div>
+                    <div>
+                      <span className="font-semibold">Desde:</span> {balance.startDate} &nbsp;|&nbsp;
+                      <span className="font-semibold">Hasta:</span> {balance.endDate}
+                    </div>
+                  </div>
+                  {/* Tabla de contadores */}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">IN Inicial</TableHead>
+                        <TableHead className="text-right">IN Final</TableHead>
+                        <TableHead className="text-right">IN Total</TableHead>
+                        <TableHead className="text-right">OUT Inicial</TableHead>
+                        <TableHead className="text-right">OUT Final</TableHead>
+                        <TableHead className="text-right">OUT Total</TableHead>
+                        <TableHead className="text-right">Jackpot Inicial</TableHead>
+                        <TableHead className="text-right">Jackpot Final</TableHead>
+                        <TableHead className="text-right">Jackpot Total</TableHead>
+                        <TableHead className="text-right">Billetero Inicial</TableHead>
+                        <TableHead className="text-right">Billetero Final</TableHead>
+                        <TableHead className="text-right">Billetero Total</TableHead>
+                        <TableHead className="text-right">Utilidad Final</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="text-right">{balance.initialIn}</TableCell>
+                        <TableCell className="text-right">{balance.finalIn}</TableCell>
+                        <TableCell className="text-right">{balance.totalIn}</TableCell>
+                        <TableCell className="text-right">{balance.initialOut}</TableCell>
+                        <TableCell className="text-right">{balance.finalOut}</TableCell>
+                        <TableCell className="text-right">{balance.totalOut}</TableCell>
+                        <TableCell className="text-right">{balance.initialJackpot}</TableCell>
+                        <TableCell className="text-right">{balance.finalJackpot}</TableCell>
+                        <TableCell className="text-right">{balance.totalJackpot}</TableCell>
+                        <TableCell className="text-right">{balance.initialBilletero}</TableCell>
+                        <TableCell className="text-right">{balance.finalBilletero}</TableCell>
+                        <TableCell className="text-right">{balance.totalBilletero}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge 
+                            variant={balance.netProfit >= 0 ? "success" : "destructive"}
+                            className="justify-center w-24"
+                          >
+                            {formatCurrency(balance.netProfit)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
