@@ -557,20 +557,19 @@ export default function MachineBalancePage() {
             </div>
           </CardHeader>
           <CardContent>
+            {/* Mostrar solo una vez el casino y la máquina */}
+            <div className="mb-4">
+              <span className="font-semibold">Casino:</span> {machineBalances[0].casino} &nbsp;|&nbsp;
+              <span className="font-semibold">Máquina:</span> {machineBalances[0].machineName} &nbsp;|&nbsp;
+              <span className="font-semibold">ID:</span> {machineBalances[0].machineId}
+            </div>
             <div className="flex flex-col gap-8">
               {machineBalances.map((balance) => (
                 <div key={`${balance.machineId}-${balance.startDate}-${balance.endDate}`} className="border rounded-lg p-4 bg-muted">
-                  {/* Cabecera del cuadre */}
-                  <div className="mb-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                      <span className="font-semibold">Casino:</span> {balance.casino} &nbsp;|&nbsp;
-                      <span className="font-semibold">Máquina:</span> {balance.machineName} &nbsp;|&nbsp;
-                      <span className="font-semibold">ID:</span> {balance.machineId}
-                    </div>
-                    <div>
-                      <span className="font-semibold">Desde:</span> {balance.startDate} &nbsp;|&nbsp;
-                      <span className="font-semibold">Hasta:</span> {balance.endDate}
-                    </div>
+                  {/* Fechas del cuadre */}
+                  <div className="mb-2">
+                    <span className="font-semibold">Desde:</span> {balance.startDate} &nbsp;|&nbsp;
+                    <span className="font-semibold">Hasta:</span> {balance.endDate}
                   </div>
                   {/* Tabla de contadores */}
                   <Table>
