@@ -43,9 +43,14 @@ export default function CasinoBalancePage() {
     const agrupado: Record<string, any> = {};
 
     for (const r of datos) {
-      if (!agrupado[r.casino]) {
-        agrupado[r.casino] = {
-          casino: r.casino,
+      // Si el filtro es por un solo casino, usa ese nombre
+      const nombreCasino = casinoSelected !== "all"
+        ? casinoSelected
+        : (r.casino ? String(r.casino).trim() : "Desconocido");
+
+      if (!agrupado[nombreCasino]) {
+        agrupado[nombreCasino] = {
+          casino: nombreCasino,
           total_in: 0,
           total_out: 0,
           total_jackpot: 0,
@@ -54,12 +59,12 @@ export default function CasinoBalancePage() {
           maquinas: new Set(),
         };
       }
-      agrupado[r.casino].total_in += r.total_in ?? 0;
-      agrupado[r.casino].total_out += r.total_out ?? 0;
-      agrupado[r.casino].total_jackpot += r.total_jackpot ?? 0;
-      agrupado[r.casino].total_billetero += r.total_billetero ?? 0;
-      agrupado[r.casino].utilidad += r.utilidad ?? 0;
-      agrupado[r.casino].maquinas.add(r.maquina);
+      agrupado[nombreCasino].total_in += r.total_in ?? 0;
+      agrupado[nombreCasino].total_out += r.total_out ?? 0;
+      agrupado[nombreCasino].total_jackpot += r.total_jackpot ?? 0;
+      agrupado[nombreCasino].total_billetero += r.total_billetero ?? 0;
+      agrupado[nombreCasino].utilidad += r.utilidad ?? 0;
+      agrupado[nombreCasino].maquinas.add(r.maquina);
     }
 
     return Object.values(agrupado).map((casino: any) => ({
@@ -163,16 +168,6 @@ export default function CasinoBalancePage() {
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" size="sm" onClick={() => {
-              setStartDate(new Date(2023, 9, 1));
-              setEndDate(new Date(2023, 10, 5));
-              setCasinoSelected("all");
-              setResultados([]);
-              setResumenPorCasino([]);
-            }}>
-              <FilterX className="mr-2 h-4 w-4" />
-              Limpiar filtros
-            </Button>
             <Button size="sm" onClick={handleProcesarBalance}>
               <Calculator className="mr-2 h-4 w-4" />
               Calcular balance
@@ -184,13 +179,49 @@ export default function CasinoBalancePage() {
       {resumenPorCasino.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <BarChart2 className="mr-2 h-5 w-5" />
-              Totales por Casino
-              <span className="ml-2 text-sm font-normal text-muted-foreground">
-                ({formatDateString(startDate)} <ArrowRight className="inline h-3 w-3 mx-1" /> {formatDateString(endDate)})
-              </span>
-            </CardTitle>
+            <div className="flex justify-between items-center w-full">
+              <CardTitle className="flex items-center">
+                <BarChart2 className="mr-2 h-5 w-5" />
+                Totales por Casino
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  ({formatDateString(startDate)} <ArrowRight className="inline h-3 w-3 mx-1" /> {formatDateString(endDate)})
+                </span>
+              </CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  try {
+                    for (const c of resumenPorCasino) {
+                      console.log("Guardando balance para casino:", c.casino);
+                      await fetch("http://127.0.0.1:8000/guardar-utilidad-casino", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          casino: c.casino,
+                          fecha_inicio: startDate?.toISOString().split("T")[0],
+                          fecha_fin: endDate?.toISOString().split("T")[0],
+                          totales: {
+                            total_in: c.total_in,
+                            total_out: c.total_out,
+                            total_jackpot: c.total_jackpot,
+                            total_billetero: c.total_billetero,
+                            utilidad_total: c.utilidad,
+                          }
+                        }),
+                      });
+                    }
+                    alert("Balance guardado correctamente.");
+                  } catch (error) {
+                    alert("Error al guardar el balance.");
+                    console.error(error);
+                  }
+                }}
+              >
+                <FileDown className="mr-2 h-4 w-4" />
+                Guardar balance
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {resumenPorCasino.map((c, i) => (
