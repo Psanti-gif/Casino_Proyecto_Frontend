@@ -186,9 +186,14 @@ export default function ReportsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-3xl font-bold text-primary">Reportes</h1>
-        <p className="text-muted-foreground">Visualización y análisis de contadores</p>
+      <div className="flex items-center justify-between w-full">
+        <div>
+          <h1 className="text-3xl font-bold text-primary">Reportes</h1>
+          <p className="text-muted-foreground">Visualización y análisis de contadores</p>
+        </div>
+        <Button variant="secondary" onClick={() => router.back()}>
+          Volver
+        </Button>
       </div>
       <div className="flex flex-wrap gap-4 items-end">
         <div>
@@ -285,9 +290,6 @@ export default function ReportsPage() {
         </Button>
         <Button variant="ghost" size="icon" onClick={handleRefrescar} title="Refrescar filtros">
           <RefreshCcw className="h-4 w-4" />
-        </Button>
-        <Button variant="secondary" onClick={() => router.back()}>
-          Volver
         </Button>
         {registros.length > 0 && (
           <div className="flex gap-2">
