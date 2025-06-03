@@ -9,7 +9,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table"
-import { CalendarIcon, RefreshCcw } from "lucide-react"
+import { CalendarIcon, RefreshCcw, FileText, FileSpreadsheet, Download } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import {
   Popover, PopoverContent, PopoverTrigger
@@ -17,16 +17,21 @@ import {
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem
 } from "@/components/ui/select"
+import { fetchReporte, fetchCasinos, fetchMaquinas, exportarReporte } from "@/lib/api"
 
 interface Registro {
-  fecha: string
-  casino: string
-  maquina: string
-  in: number
-  out: number
-  jackpot: number
-  billetero: number
-  utilidad: number
+  fecha_inicio?: string;
+  fecha_fin?: string;
+  casino: string;
+  maquina: string;
+  in: number;
+  out: number;
+  jackpot: number;
+  billetero: number;
+  utilidad: number;
+  denominacion?: number;
+  contador_inicial?: any;
+  contador_final?: any;
 }
 
 export default function ReportsPage() {
@@ -34,30 +39,125 @@ export default function ReportsPage() {
   const [fechaInicio, setFechaInicio] = useState<Date | undefined>()
   const [fechaFin, setFechaFin] = useState<Date | undefined>()
   const [casinoFiltro, setCasinoFiltro] = useState("Todos")
-  const [casinos, setCasinos] = useState<string[]>([])
+  const [casinos, setCasinos] = useState<any[]>([])
+  const [maquinaFiltro, setMaquinaFiltro] = useState<string>("")
+  const [marcaFiltro, setMarcaFiltro] = useState("");
+  const [modeloFiltro, setModeloFiltro] = useState("");
+  const [ciudadFiltro, setCiudadFiltro] = useState("");
+  const [mostrarReporte, setMostrarReporte] = useState(false)
+  const [maquinas, setMaquinas] = useState<any[]>([])
+  const [marcas, setMarcas] = useState<string[]>([])
+  const [modelos, setModelos] = useState<string[]>([])
+  const [ciudades, setCiudades] = useState<string[]>([])
+  const [porcentajeParticipacion, setPorcentajeParticipacion] = useState<number>(50)
+  const [mostrarDialogoParticipacion, setMostrarDialogoParticipacion] = useState<boolean>(false)
 
   const cargarDatos = async () => {
-    const params = new URLSearchParams()
-    if (fechaInicio) params.append("fecha_inicio", fechaInicio.toISOString().split("T")[0])
-    if (fechaFin) params.append("fecha_fin", fechaFin.toISOString().split("T")[0])
-    if (casinoFiltro !== "Todos") params.append("casino", casinoFiltro)
-
-    const res = await fetch(`http://localhost:8000/generar-reporte?${params.toString()}`)
-    const data = await res.json()
-    const registrosData = Array.isArray(data.registros) ? data.registros : []
-    setRegistros(registrosData)
-
-    const unicos = Array.from(new Set(registrosData.map((r: Registro) => r.casino)))
-    setCasinos(unicos as string[])
+    try {
+      const params: any = {};
+      if (fechaInicio) params.fechaInicio = fechaInicio.toISOString().split("T")[0];
+      if (fechaFin) params.fechaFin = fechaFin.toISOString().split("T")[0];
+      // Permitir que casinoFiltro sea 'Todos' para mostrar todos los casinos
+      if (casinoFiltro && casinoFiltro !== "Todos") {
+        params.casino = casinoFiltro;
+      } else if (casinoFiltro === "Todos") {
+        params.casino = "Todos";
+      }
+      if (maquinaFiltro) params.maquinas = [maquinaFiltro];
+      if (marcaFiltro) params.marca = marcaFiltro;
+      if (modeloFiltro) params.modelo = modeloFiltro;
+      if (ciudadFiltro) params.ciudad = ciudadFiltro;
+      const data = await fetchReporte(params);
+      const registrosData = Array.isArray(data.registros) ? data.registros : [];
+      setRegistros(registrosData);
+      const unicos = Array.from(new Set(registrosData.map((r: Registro) => r.casino)));
+      setCasinos(unicos as string[]);
+    } catch (error: any) {
+      setRegistros([]);
+      // Mostrar mensaje amigable si no hay datos
+      if (error.message && error.message.includes('Error al obtener el reporte')) {
+        // No mostrar alert, solo limpiar la tabla
+        return;
+      }
+      alert('Ocurrió un error al consultar el reporte.');
+    }
   }
 
   useEffect(() => {
-    cargarDatos()
-  }, [fechaInicio, fechaFin, casinoFiltro])
+    if (mostrarReporte) {
+      cargarDatos()
+      setMostrarReporte(false)
+    }
+    // eslint-disable-next-line
+  }, [mostrarReporte])
 
+  useEffect(() => {
+    // Cargar casinos al montar
+    fetchCasinos().then((data) => {      // Asume que la respuesta es un array
+      setCasinos(data);
+    }).catch((error) => {
+      console.error("Error al cargar los casinos:", error);
+      // Mantener el estado actual de casinos en caso de error
+    });
+  }, []);
+
+  useEffect(() => {
+    fetchMaquinas().then((data) => {
+      setMaquinas(data)
+      setMarcas(Array.from(new Set(data.map((m: any) => m.marca))))
+      setModelos(Array.from(new Set(data.map((m: any) => m.modelo))))
+      setCiudades(Array.from(new Set(data.map((m: any) => m.ciudad || m.casino || ""))))
+    })
+  }, [])
   const utilidadTotal = Array.isArray(registros)
     ? registros.reduce((acc, r) => acc + r.utilidad, 0)
     : 0
+
+  const handleExportarReporte = async (formato: 'pdf' | 'excel') => {
+    try {
+      const params: any = {};
+      if (fechaInicio) params.fechaInicio = fechaInicio.toISOString().split("T")[0];
+      if (fechaFin) params.fechaFin = fechaFin.toISOString().split("T")[0];
+      if (casinoFiltro && casinoFiltro !== "Todos") {
+        params.casino = casinoFiltro;
+      }
+      if (maquinaFiltro && maquinaFiltro !== "__all__") params.maquinas = [maquinaFiltro];
+      if (marcaFiltro && marcaFiltro !== "__all__") params.marca = marcaFiltro;
+      if (modeloFiltro && modeloFiltro !== "__all__") params.modelo = modeloFiltro;
+      if (ciudadFiltro && ciudadFiltro !== "__all__") params.ciudad = ciudadFiltro;
+      
+      await exportarReporte({
+        formato,
+        ...params
+      });
+    } catch (error: any) {
+      alert(`Error al exportar el reporte: ${error.message || 'Error desconocido'}`);
+    }
+  };
+
+  useEffect(() => {
+    console.log("Casinos cargados:", casinos);
+  }, [casinos]);
+
+  useEffect(() => {
+    if (casinoFiltro) {
+      setMostrarReporte(false); // Reset mostrarReporte to ensure user clicks 'Mostrar Reporte' to fetch data
+    }
+  }, [casinoFiltro]);
+
+  useEffect(() => {
+    console.log("Casino seleccionado:", casinoFiltro);
+  }, [casinoFiltro]);
+
+  useEffect(() => {
+    if (!mostrarReporte) {
+      fetchCasinos().then((data) => {
+        setCasinos(data);
+      }).catch((error) => {
+        console.error("Error al recargar los casinos:", error);
+      });
+    }
+  }, [mostrarReporte]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -105,16 +205,108 @@ export default function ReportsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Todos">Todos</SelectItem>
-              {casinos.map(c => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
+              {casinos.map((c) => (
+                <SelectItem key={c.codigo || c.nombre_casino} value={c.nombre_casino}>
+                  {c.nombre_casino}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
+        <div>
+          <label className="text-sm font-medium">Máquina (opcional)</label>
+          <Select value={maquinaFiltro} onValueChange={setMaquinaFiltro}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Máquina" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todas</SelectItem>
+              {maquinas.filter((m) => m.codigo).map((m) => (
+                <SelectItem key={m.codigo} value={m.codigo}>{m.codigo}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Marca (opcional)</label>
+          <Select value={marcaFiltro} onValueChange={setMarcaFiltro}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Marca" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todas</SelectItem>
+              {marcas.filter(Boolean).map((m) => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Modelo (opcional)</label>
+          <Select value={modeloFiltro} onValueChange={setModeloFiltro}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Modelo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todos</SelectItem>
+              {modelos.filter(Boolean).map((m) => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Ciudad (opcional)</label>
+          <Select value={ciudadFiltro} onValueChange={setCiudadFiltro}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Ciudad" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">Todas</SelectItem>
+              {ciudades.filter(Boolean).map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>        <Button variant="default" onClick={() => setMostrarReporte(true)}>
+          Mostrar Reporte
+        </Button>
         <Button variant="ghost" size="icon" onClick={cargarDatos}>
           <RefreshCcw className="h-4 w-4" />
         </Button>
+          {registros.length > 0 && (
+          <div className="flex gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-1">
+                  <Download className="h-4 w-4 mr-1" />
+                  Exportar
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48">
+                <div className="flex flex-col gap-2">
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => handleExportarReporte('pdf')}
+                    className="flex items-center justify-start gap-1"
+                  >
+                    <FileText className="h-4 w-4 mr-1" />
+                    Exportar PDF
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => handleExportarReporte('excel')}
+                    className="flex items-center justify-start gap-1"
+                  >
+                    <FileSpreadsheet className="h-4 w-4 mr-1" />
+                    Exportar Excel
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
       </div>
 
       <Card>
@@ -122,40 +314,46 @@ export default function ReportsPage() {
           <CardTitle className="text-primary">Reporte de Contadores</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Casino</TableHead>
-                <TableHead>Máquina</TableHead>
-                <TableHead className="text-right">IN</TableHead>
-                <TableHead className="text-right">OUT</TableHead>
-                <TableHead className="text-right">JACKPOT</TableHead>
-                <TableHead className="text-right">BILLETERO</TableHead>
-                <TableHead className="text-right">UTILIDAD</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {registros.map((r, i) => (
-                <TableRow key={i}>
-                  <TableCell>{r.fecha}</TableCell>
-                  <TableCell>{r.casino}</TableCell>
-                  <TableCell>{r.maquina}</TableCell>
-                  <TableCell className="text-right">{r.in.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{r.out.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{r.jackpot.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{r.billetero.toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-semibold text-green-600">{r.utilidad.toLocaleString()}</TableCell>
+          {registros.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">No hay resultados para los filtros seleccionados.</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha Inicio</TableHead>
+                  <TableHead>Fecha Fin</TableHead>
+                  <TableHead>Casino</TableHead>
+                  <TableHead>Máquina</TableHead>
+                  <TableHead className="text-right">IN</TableHead>
+                  <TableHead className="text-right">OUT</TableHead>
+                  <TableHead className="text-right">JACKPOT</TableHead>
+                  <TableHead className="text-right">BILLETERO</TableHead>
+                  <TableHead className="text-right">UTILIDAD</TableHead>
                 </TableRow>
-              ))}
-              <TableRow>
-                <TableCell colSpan={7} className="text-right font-bold">Total</TableCell>
-                <TableCell className="text-right font-bold text-green-700">
-                  {utilidadTotal.toLocaleString()}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {registros.map((r, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{r.fecha_inicio || "-"}</TableCell>
+                    <TableCell>{r.fecha_fin || "-"}</TableCell>
+                    <TableCell>{r.casino}</TableCell>
+                    <TableCell>{r.maquina}</TableCell>
+                    <TableCell className="text-right">{r.in?.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{r.out?.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{r.jackpot?.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{r.billetero?.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-semibold text-green-600">{r.utilidad?.toLocaleString()}</TableCell>
+                  </TableRow>
+                ))}
+                <TableRow>
+                  <TableCell colSpan={8} className="text-right font-bold">Total</TableCell>
+                  <TableCell className="text-right font-bold text-green-700">
+                    {utilidadTotal.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
