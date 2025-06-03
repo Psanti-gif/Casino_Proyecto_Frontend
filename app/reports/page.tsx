@@ -47,6 +47,8 @@ export default function ReportsPage() {
   const [modelos, setModelos] = useState<string[]>([])
   const [porcentajeParticipacion, setPorcentajeParticipacion] = useState<number>(50)
   const [mostrarDialogoParticipacion, setMostrarDialogoParticipacion] = useState<boolean>(false)
+  const [marcaFiltro, setMarcaFiltro] = useState("Todos");
+  const [marcas, setMarcas] = useState<string[]>([]);
 
   const cargarDatos = async () => {
     try {
@@ -58,10 +60,11 @@ export default function ReportsPage() {
       }
       if (maquinaFiltro && maquinaFiltro !== "Todos") params.maquinas = [maquinaFiltro];
       if (modeloFiltro && modeloFiltro !== "Todos") params.modelo = modeloFiltro;
+      if (marcaFiltro && marcaFiltro !== "Todos") params.marca = marcaFiltro;
+      // Eliminar ciudadFiltro
       const data = await fetchReporte(params);
       const registrosData = Array.isArray(data.registros) ? data.registros : [];
       setRegistros(registrosData);
-      // No actualizar el listado de casinos aquí, solo al cargar casinos
     } catch (error: any) {
       setRegistros([]);
       if (error.message && error.message.includes('Error al obtener el reporte')) {
@@ -93,10 +96,12 @@ export default function ReportsPage() {
     fetchMaquinas().then((data) => {
       setMaquinas(data);
       setModelos(Array.from(new Set(data.map((m: any) => m.modelo))));
+      setMarcas(Array.from(new Set(data.map((m: any) => m.marca))));
     }).catch((error) => {
       console.error("Error al cargar las máquinas:", error);
     });
-  }, [])
+  }, []);
+
   const utilidadTotal = Array.isArray(registros)
     ? registros.reduce((acc, r) => acc + r.utilidad, 0)
     : 0
@@ -111,6 +116,8 @@ export default function ReportsPage() {
       }
       if (maquinaFiltro && maquinaFiltro !== "Todos") params.maquinas = [maquinaFiltro];
       if (modeloFiltro && modeloFiltro !== "Todos") params.modelo = modeloFiltro;
+      if (marcaFiltro && marcaFiltro !== "Todos") params.marca = marcaFiltro;
+      // Eliminar ciudadFiltro
       await exportarReporte({
         formato,
         ...params
@@ -145,16 +152,25 @@ export default function ReportsPage() {
   }, [mostrarReporte]);
 
   // Filtrar modelos según la máquina seleccionada
-  const modelosFiltrados = modeloFiltro === "Todos"
-    ? modelos
-    : modelos.filter((m) => {
-        if (maquinaFiltro && maquinaFiltro !== "Todos") {
-          // Solo mostrar modelos de la máquina seleccionada
-          const maquina = maquinas.find((maq) => maq.codigo === maquinaFiltro);
-          return maquina && maquina.modelo === m;
-        }
-        return true;
-      });
+  const modelosFiltrados = maquinaFiltro && maquinaFiltro !== "Todos"
+    ? modelos.filter((m) => {
+        const maquina = maquinas.find((maq) => maq.codigo === maquinaFiltro);
+        return maquina && maquina.modelo === m;
+      })
+    : [];
+
+  const marcasFiltradas = maquinaFiltro && maquinaFiltro !== "Todos"
+    ? marcas.filter((marca) => {
+        const maquina = maquinas.find((maq) => maq.codigo === maquinaFiltro);
+        return maquina && maquina.marca === marca;
+      })
+    : [];
+
+  // Filtros que actualizan el reporte automáticamente
+  useEffect(() => {
+    cargarDatos();
+    // eslint-disable-next-line
+  }, [casinoFiltro, maquinaFiltro, modeloFiltro, marcaFiltro, fechaInicio, fechaFin]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -227,13 +243,27 @@ export default function ReportsPage() {
         </div>
         <div>
           <label className="text-sm font-medium">Modelo</label>
-          <Select value={modeloFiltro} onValueChange={setModeloFiltro}>
+          <Select value={modeloFiltro} onValueChange={setModeloFiltro} disabled={!maquinaFiltro || maquinaFiltro === "Todos"}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Modelo" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Todos">Todos</SelectItem>
               {modelosFiltrados.map((m) => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-sm font-medium">Marca</label>
+          <Select value={marcaFiltro} onValueChange={setMarcaFiltro} disabled={!maquinaFiltro || maquinaFiltro === "Todos"}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Marca" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos">Todas</SelectItem>
+              {marcasFiltradas.map((m) => (
                 <SelectItem key={m} value={m}>{m}</SelectItem>
               ))}
             </SelectContent>
