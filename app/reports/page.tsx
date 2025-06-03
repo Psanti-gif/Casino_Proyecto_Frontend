@@ -41,14 +41,10 @@ export default function ReportsPage() {
   const [casinoFiltro, setCasinoFiltro] = useState("Todos")
   const [casinos, setCasinos] = useState<any[]>([])
   const [maquinaFiltro, setMaquinaFiltro] = useState<string>("")
-  const [marcaFiltro, setMarcaFiltro] = useState("");
-  const [modeloFiltro, setModeloFiltro] = useState("");
-  const [ciudadFiltro, setCiudadFiltro] = useState("");
+  const [modeloFiltro, setModeloFiltro] = useState("")
   const [mostrarReporte, setMostrarReporte] = useState(false)
   const [maquinas, setMaquinas] = useState<any[]>([])
-  const [marcas, setMarcas] = useState<string[]>([])
   const [modelos, setModelos] = useState<string[]>([])
-  const [ciudades, setCiudades] = useState<string[]>([])
   const [porcentajeParticipacion, setPorcentajeParticipacion] = useState<number>(50)
   const [mostrarDialogoParticipacion, setMostrarDialogoParticipacion] = useState<boolean>(false)
 
@@ -57,26 +53,18 @@ export default function ReportsPage() {
       const params: any = {};
       if (fechaInicio) params.fechaInicio = fechaInicio.toISOString().split("T")[0];
       if (fechaFin) params.fechaFin = fechaFin.toISOString().split("T")[0];
-      // Permitir que casinoFiltro sea 'Todos' para mostrar todos los casinos
       if (casinoFiltro && casinoFiltro !== "Todos") {
         params.casino = casinoFiltro;
-      } else if (casinoFiltro === "Todos") {
-        params.casino = "Todos";
       }
-      if (maquinaFiltro) params.maquinas = [maquinaFiltro];
-      if (marcaFiltro) params.marca = marcaFiltro;
-      if (modeloFiltro) params.modelo = modeloFiltro;
-      if (ciudadFiltro) params.ciudad = ciudadFiltro;
+      if (maquinaFiltro && maquinaFiltro !== "Todos") params.maquinas = [maquinaFiltro];
+      if (modeloFiltro && modeloFiltro !== "Todos") params.modelo = modeloFiltro;
       const data = await fetchReporte(params);
       const registrosData = Array.isArray(data.registros) ? data.registros : [];
       setRegistros(registrosData);
-      const unicos = Array.from(new Set(registrosData.map((r: Registro) => r.casino)));
-      setCasinos(unicos as string[]);
+      // No actualizar el listado de casinos aquí, solo al cargar casinos
     } catch (error: any) {
       setRegistros([]);
-      // Mostrar mensaje amigable si no hay datos
       if (error.message && error.message.includes('Error al obtener el reporte')) {
-        // No mostrar alert, solo limpiar la tabla
         return;
       }
       alert('Ocurrió un error al consultar el reporte.');
@@ -93,21 +81,21 @@ export default function ReportsPage() {
 
   useEffect(() => {
     // Cargar casinos al montar
-    fetchCasinos().then((data) => {      // Asume que la respuesta es un array
+    fetchCasinos().then((data) => {
       setCasinos(data);
     }).catch((error) => {
       console.error("Error al cargar los casinos:", error);
-      // Mantener el estado actual de casinos en caso de error
     });
   }, []);
 
   useEffect(() => {
+    // Cargar máquinas y modelos al montar
     fetchMaquinas().then((data) => {
-      setMaquinas(data)
-      setMarcas(Array.from(new Set(data.map((m: any) => m.marca))))
-      setModelos(Array.from(new Set(data.map((m: any) => m.modelo))))
-      setCiudades(Array.from(new Set(data.map((m: any) => m.ciudad || m.casino || ""))))
-    })
+      setMaquinas(data);
+      setModelos(Array.from(new Set(data.map((m: any) => m.modelo))));
+    }).catch((error) => {
+      console.error("Error al cargar las máquinas:", error);
+    });
   }, [])
   const utilidadTotal = Array.isArray(registros)
     ? registros.reduce((acc, r) => acc + r.utilidad, 0)
@@ -121,11 +109,8 @@ export default function ReportsPage() {
       if (casinoFiltro && casinoFiltro !== "Todos") {
         params.casino = casinoFiltro;
       }
-      if (maquinaFiltro && maquinaFiltro !== "__all__") params.maquinas = [maquinaFiltro];
-      if (marcaFiltro && marcaFiltro !== "__all__") params.marca = marcaFiltro;
-      if (modeloFiltro && modeloFiltro !== "__all__") params.modelo = modeloFiltro;
-      if (ciudadFiltro && ciudadFiltro !== "__all__") params.ciudad = ciudadFiltro;
-      
+      if (maquinaFiltro && maquinaFiltro !== "Todos") params.maquinas = [maquinaFiltro];
+      if (modeloFiltro && modeloFiltro !== "Todos") params.modelo = modeloFiltro;
       await exportarReporte({
         formato,
         ...params
@@ -158,6 +143,18 @@ export default function ReportsPage() {
       });
     }
   }, [mostrarReporte]);
+
+  // Filtrar modelos según la máquina seleccionada
+  const modelosFiltrados = modeloFiltro === "Todos"
+    ? modelos
+    : modelos.filter((m) => {
+        if (maquinaFiltro && maquinaFiltro !== "Todos") {
+          // Solo mostrar modelos de la máquina seleccionada
+          const maquina = maquinas.find((maq) => maq.codigo === maquinaFiltro);
+          return maquina && maquina.modelo === m;
+        }
+        return true;
+      });
 
   return (
     <div className="flex flex-col gap-5">
@@ -215,67 +212,40 @@ export default function ReportsPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Máquina (opcional)</label>
+          <label className="text-sm font-medium">Máquina</label>
           <Select value={maquinaFiltro} onValueChange={setMaquinaFiltro}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Máquina" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all__">Todas</SelectItem>
-              {maquinas.filter((m) => m.codigo).map((m) => (
+              <SelectItem value="Todos">Todas</SelectItem>
+              {maquinas.map((m) => (
                 <SelectItem key={m.codigo} value={m.codigo}>{m.codigo}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <div>
-          <label className="text-sm font-medium">Marca (opcional)</label>
-          <Select value={marcaFiltro} onValueChange={setMarcaFiltro}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Marca" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">Todas</SelectItem>
-              {marcas.filter(Boolean).map((m) => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-sm font-medium">Modelo (opcional)</label>
+          <label className="text-sm font-medium">Modelo</label>
           <Select value={modeloFiltro} onValueChange={setModeloFiltro}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Modelo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all__">Todos</SelectItem>
-              {modelos.filter(Boolean).map((m) => (
+              <SelectItem value="Todos">Todos</SelectItem>
+              {modelosFiltrados.map((m) => (
                 <SelectItem key={m} value={m}>{m}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        <div>
-          <label className="text-sm font-medium">Ciudad (opcional)</label>
-          <Select value={ciudadFiltro} onValueChange={setCiudadFiltro}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Ciudad" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">Todas</SelectItem>
-              {ciudades.filter(Boolean).map((c) => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>        <Button variant="default" onClick={() => setMostrarReporte(true)}>
+        <Button variant="default" onClick={() => setMostrarReporte(true)}>
           Mostrar Reporte
         </Button>
         <Button variant="ghost" size="icon" onClick={cargarDatos}>
           <RefreshCcw className="h-4 w-4" />
         </Button>
-          {registros.length > 0 && (
+        {registros.length > 0 && (
           <div className="flex gap-2">
             <Popover>
               <PopoverTrigger asChild>
