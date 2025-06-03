@@ -18,6 +18,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem
 } from "@/components/ui/select"
 import { fetchReporte, fetchCasinos, fetchMaquinas, exportarReporte } from "@/lib/api"
+import { useRouter } from "next/navigation"
 
 interface Registro {
   fecha_inicio?: string;
@@ -49,6 +50,7 @@ export default function ReportsPage() {
   const [mostrarDialogoParticipacion, setMostrarDialogoParticipacion] = useState<boolean>(false)
   const [marcaFiltro, setMarcaFiltro] = useState("Todos");
   const [marcas, setMarcas] = useState<string[]>([]);
+  const router = useRouter();
 
   const cargarDatos = async () => {
     try {
@@ -172,13 +174,22 @@ export default function ReportsPage() {
     // eslint-disable-next-line
   }, [casinoFiltro, maquinaFiltro, modeloFiltro, marcaFiltro, fechaInicio, fechaFin]);
 
+  const handleRefrescar = () => {
+    setCasinoFiltro("Todos");
+    setMaquinaFiltro("");
+    setModeloFiltro("");
+    setMarcaFiltro("Todos");
+    setFechaInicio(undefined);
+    setFechaFin(undefined);
+    cargarDatos();
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="text-3xl font-bold text-primary">Reportes</h1>
         <p className="text-muted-foreground">Visualización y análisis de contadores</p>
       </div>
-
       <div className="flex flex-wrap gap-4 items-end">
         <div>
           <label className="text-sm font-medium">Fecha Inicio</label>
@@ -272,8 +283,11 @@ export default function ReportsPage() {
         <Button variant="default" onClick={() => setMostrarReporte(true)}>
           Mostrar Reporte
         </Button>
-        <Button variant="ghost" size="icon" onClick={cargarDatos}>
+        <Button variant="ghost" size="icon" onClick={handleRefrescar} title="Refrescar filtros">
           <RefreshCcw className="h-4 w-4" />
+        </Button>
+        <Button variant="secondary" onClick={() => router.back()}>
+          Volver
         </Button>
         {registros.length > 0 && (
           <div className="flex gap-2">
