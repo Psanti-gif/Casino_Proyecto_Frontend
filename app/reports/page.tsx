@@ -191,8 +191,8 @@ export default function ReportsPage() {
           <h1 className="text-3xl font-bold text-primary">Reportes</h1>
           <p className="text-muted-foreground">Visualización y análisis de contadores</p>
         </div>
-        <Button variant="secondary" onClick={() => router.back()}>
-          Volver
+        <Button variant="secondary" onClick={() => router.back()} className="flex items-center gap-2">
+          <span className="text-lg">←</span> Volver
         </Button>
       </div>
       <div className="flex flex-wrap gap-4 items-end">
