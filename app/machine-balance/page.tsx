@@ -561,7 +561,7 @@ export default function MachineBalancePage() {
             <div className="mb-4">
               <span className="font-semibold">Casino:</span> {machineBalances[0].casino} &nbsp;|&nbsp;
               <span className="font-semibold">Máquina:</span> {machineBalances[0].machineName} &nbsp;|&nbsp;
-              <span className="font-semibold">ID:</span> {machineBalances[0].machineId}
+              <span className="font-semibold">Denominación:</span> {machineBalances[0].denomination}
             </div>
             <div className="flex flex-col gap-8">
               {machineBalances.map((balance) => (
@@ -617,6 +617,18 @@ export default function MachineBalancePage() {
                   </Table>
                 </div>
               ))}
+            </div>
+            
+            {/* Suma total de utilidades */}
+            <div className="mt-6 flex justify-end">
+              <div className="text-lg font-bold">
+                Total utilidad:&nbsp;
+                <Badge variant="success" className="text-base px-4 py-2">
+                  {formatCurrency(
+                    machineBalances.reduce((acc, balance) => acc + (balance.netProfit ?? 0), 0)
+                  )}
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>
