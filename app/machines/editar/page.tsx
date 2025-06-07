@@ -1,79 +1,90 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import {
-  Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Lugar {
   id: number
   nombre_casino: string
 }
 
-const MARCAS_MODELOS = {
-  "IGT": ["Game King", "Wheel of Fortune", "Double Diamond", "S2000", "Cleopatra"],
-  "Aristocrat": ["Buffalo", "Dragon Link", "Lightning Link", "Pompeii", "Queen of the Nile"],
-  "Konami": ["China Shores", "Fortune Stacks", "Dragon's Law", "Lotus Land", "Jumpin Jalapenos"],
-  "Scientific Games": ["Zeus", "Monopoly", "Quick Hit", "Hot Shot", "Cash Spin"],
-  "Novomatic": ["Book of Ra", "Sizzling Hot", "Lucky Lady's Charm", "Columbus", "Dolphin's Pearl"]
-}
-
 export default function EditarMaquinaPage() {
-  const router = useRouter()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const id = searchParams.get("id")
 
-  const [cargando, setCargando] = useState(true)
   const [codigo, setCodigo] = useState("")
+  const [activo, setActivo] = useState(1)
   const [marca, setMarca] = useState("")
   const [modelo, setModelo] = useState("")
   const [numeroSerie, setNumeroSerie] = useState("")
   const [denominacion, setDenominacion] = useState("")
   const [casino, setCasino] = useState("")
   const [casinos, setCasinos] = useState<Lugar[]>([])
+  const [marcasDisponibles, setMarcasDisponibles] = useState<string[]>([])
+  const [modelosDisponibles, setModelosDisponibles] = useState<string[]>([])
+  const [marcasModelos, setMarcasModelos] = useState<Record<string, string[]>>({})
+  const [error, setError] = useState("")
 
   useEffect(() => {
-    const cargarDatos = async () => {
-      try {
-        const resMaquina = await fetch(`http://localhost:8000/maquinas`)
-        const maquinas = await resMaquina.json()
-        const maquina = maquinas.find((m: any) => m.id.toString() === id)
-        if (!maquina) throw new Error("No encontrada")
-
-        setCodigo(maquina.codigo)
-        setMarca(maquina.marca)
-        setModelo(maquina.modelo)
-        setNumeroSerie(maquina.numero_serie)
-        setDenominacion(maquina.denominacion.toString())
-        setCasino(maquina.casino)
-
-        const resLugares = await fetch("http://localhost:8000/listar-lugares")
-        const data = await resLugares.json()
-        const lista = Array.isArray(data)
-          ? data
-          : Object.entries(data).map(([id, l]: any) => ({ id: Number(id), ...l }))
-        setCasinos(lista.filter((l) => l.estado === "Activo"))
-      } catch (error) {
-        alert("Error al cargar datos de la máquina.")
-        router.push("/machines")
-      } finally {
-        setCargando(false)
+    const cargarMaquina = async () => {
+      const res = await fetch(`http://localhost:8000/maquina/${id}`)
+      if (!res.ok) {
+        setError("No se pudo cargar la máquina")
+        return
       }
+      const data = await res.json()
+      setCodigo(data.codigo)
+      setActivo(data.activo)
+      setMarca(data.marca)
+      setModelo(data.modelo)
+      setNumeroSerie(data.numero_serie)
+      setDenominacion(data.denominacion.toString())
+      setCasino(data.casino)
     }
 
-    if (id) cargarDatos()
-  }, [id, router])
+    const cargarLugares = async () => {
+      const res = await fetch("http://localhost:8000/listar-lugares")
+      const data = await res.json()
+      const lista = Array.isArray(data)
+        ? data
+        : Object.entries(data).map(([id, lugar]: any) => ({ id: Number(id), ...lugar }))
+      setCasinos(lista.filter((l: any) => l.estado === "Activo"))
+    }
 
-  const guardarCambios = async () => {
-    const maquinaEditada = {
+    const cargarMarcasYModelos = async () => {
+      const res = await fetch("http://localhost:8000/marcas_modelos.json")
+      const data = await res.json()
+      setMarcasModelos(data)
+      setMarcasDisponibles(Object.keys(data))
+    }
+
+    if (id) {
+      cargarMaquina()
+      cargarLugares()
+      cargarMarcasYModelos()
+    }
+  }, [id])
+
+  useEffect(() => {
+    if (marca && marcasModelos[marca]) {
+      setModelosDisponibles(marcasModelos[marca])
+    } else {
+      setModelosDisponibles([])
+    }
+  }, [marca, marcasModelos])
+
+  const guardar = async () => {
+    setError("")
+
+    const datosEditados = {
       codigo,
-      activo: 1,
+      activo,
       marca,
       modelo,
       numero_serie: numeroSerie,
@@ -81,63 +92,76 @@ export default function EditarMaquinaPage() {
       casino
     }
 
-    const res = await fetch(`http://localhost:8000/maquinas/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(maquinaEditada)
-    })
+    try {
+      const res = await fetch(`http://localhost:8000/maquinas/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(datosEditados)
+      })
 
-    if (res.ok) {
-      alert("Máquina actualizada correctamente")
-      router.push("/machines")
-    } else {
-      alert("Error al actualizar la máquina")
+      const data = await res.json()
+
+      if (res.ok) {
+        alert("Máquina actualizada correctamente")
+        router.push("/machines")
+      } else {
+        setError(data.detail || "Error al actualizar la máquina")
+      }
+    } catch (err) {
+      console.error(err)
+      setError("No se pudo conectar con el servidor")
     }
   }
 
-  if (cargando) return <p className="p-4">Cargando...</p>
-
   return (
     <div className="max-w-2xl mx-auto mt-10">
-      <Button variant="outline" className="mb-4" onClick={() => router.push("/machines")}>
-        ← Volver
-      </Button>
+      <Button variant="outline" className="mb-4" onClick={() => router.push("/machines")}>← Volver</Button>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-primary">Editar Máquina</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
+          {error && <div className="text-red-600 text-sm border border-red-300 p-2 rounded">{error}</div>}
+
           <div>
             <Label>Código</Label>
-            <Input value={codigo} disabled />
+            <Input value={codigo} onChange={(e) => setCodigo(e.target.value)} disabled />
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Marca</Label>
-              <Select value={marca} onValueChange={(value) => {
-                setMarca(value)
-                setModelo("")
-              }}>
+              <Select value={marca} onValueChange={(value) => setMarca(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona una marca" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.keys(MARCAS_MODELOS).map((m) => (
+                  {marcasDisponibles.map((m) => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
             <div>
               <Label>Modelo</Label>
-              <Select value={modelo} onValueChange={setModelo} disabled={!marca}>
+              <Select
+                value={modelo}
+                onValueChange={setModelo}
+                disabled={!marca || modelosDisponibles.length === 0}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={marca ? "Selecciona un modelo" : "Selecciona una marca"} />
+                  <SelectValue placeholder={
+                    !marca
+                      ? "Selecciona una marca primero"
+                      : modelosDisponibles.length === 0
+                        ? "Esta marca no tiene modelos"
+                        : "Selecciona un modelo"
+                  } />
                 </SelectTrigger>
                 <SelectContent>
-                  {(MARCAS_MODELOS[marca] || []).map((m) => (
+                  {modelosDisponibles.map((m) => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
                 </SelectContent>
@@ -152,12 +176,7 @@ export default function EditarMaquinaPage() {
             </div>
             <div>
               <Label>Denominación</Label>
-              <Input
-                type="number"
-                step="0.01"
-                value={denominacion}
-                disabled
-              />
+              <Input type="number" step="0.01" value={denominacion} onChange={(e) => setDenominacion(e.target.value)} required />
             </div>
           </div>
 
@@ -169,21 +188,15 @@ export default function EditarMaquinaPage() {
               </SelectTrigger>
               <SelectContent>
                 {casinos.map((c) => (
-                  <SelectItem key={c.id} value={c.nombre_casino}>
-                    {c.nombre_casino}
-                  </SelectItem>
+                  <SelectItem key={c.id} value={c.nombre_casino}>{c.nombre_casino}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => router.push("/machines")}>
-              Cancelar
-            </Button>
-            <Button className="bg-primary text-white" onClick={guardarCambios}>
-              Guardar Cambios
-            </Button>
+            <Button variant="outline" onClick={() => router.push("/machines")}>Cancelar</Button>
+            <Button className="bg-primary text-white" onClick={guardar}>Guardar Cambios</Button>
           </div>
         </CardContent>
       </Card>

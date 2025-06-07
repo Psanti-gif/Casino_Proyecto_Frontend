@@ -125,6 +125,7 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {/* Filtros */}
       <div className="flex flex-wrap gap-4 items-end">
         <div>
           <label className="text-sm font-medium">Buscar por ID</label>
@@ -185,7 +186,6 @@ export default function UsersPage() {
 
         <Button
           variant="ghost"
-          size="icon"
           onClick={() => {
             setBusquedaId("")
             setBusquedaUsuario("")
@@ -196,10 +196,12 @@ export default function UsersPage() {
             recargar()
           }}
         >
-          <RefreshCcw className="h-4 w-4" />
+          <RefreshCcw className="h-4 w-4 mr-2" />
+          Limpiar Filtros
         </Button>
       </div>
 
+      {/* Tabla */}
       <Card>
         <CardHeader>
           <CardTitle className="text-primary">Lista de Usuarios</CardTitle>

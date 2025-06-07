@@ -13,14 +13,6 @@ interface Lugar {
   nombre_casino: string
 }
 
-const MARCAS_MODELOS = {
-  "IGT": ["Game King", "Wheel of Fortune", "Double Diamond", "S2000", "Cleopatra"],
-  "Aristocrat": ["Buffalo", "Dragon Link", "Lightning Link", "Pompeii", "Queen of the Nile"],
-  "Konami": ["China Shores", "Fortune Stacks", "Dragon's Law", "Lotus Land", "Jumpin Jalapenos"],
-  "Scientific Games": ["Zeus", "Monopoly", "Quick Hit", "Hot Shot", "Cash Spin"],
-  "Novomatic": ["Book of Ra", "Sizzling Hot", "Lucky Lady's Charm", "Columbus", "Dolphin's Pearl"]
-}
-
 export default function CrearMaquinaPage() {
   const router = useRouter()
 
@@ -32,6 +24,10 @@ export default function CrearMaquinaPage() {
   const [denominacion, setDenominacion] = useState("")
   const [casino, setCasino] = useState("")
   const [casinos, setCasinos] = useState<Lugar[]>([])
+  const [marcasDisponibles, setMarcasDisponibles] = useState<string[]>([])
+  const [modelosDisponibles, setModelosDisponibles] = useState<string[]>([])
+  const [marcasModelos, setMarcasModelos] = useState<Record<string, string[]>>({})
+  const [error, setError] = useState("")
 
   useEffect(() => {
     const cargarLugares = async () => {
@@ -43,10 +39,29 @@ export default function CrearMaquinaPage() {
       setCasinos(lista.filter((l: any) => l.estado === "Activo"))
     }
 
+    const cargarMarcasYModelos = async () => {
+      const res = await fetch("http://localhost:8000/marcas_modelos.json")
+      const data = await res.json()
+      setMarcasModelos(data)
+      setMarcasDisponibles(Object.keys(data))
+    }
+
     cargarLugares()
+    cargarMarcasYModelos()
   }, [])
 
+  useEffect(() => {
+    if (marca && marcasModelos[marca]) {
+      setModelosDisponibles(marcasModelos[marca])
+    } else {
+      setModelosDisponibles([])
+    }
+    setModelo("")
+  }, [marca, marcasModelos])
+
   const guardar = async () => {
+    setError("") // limpiar error anterior
+
     const nuevaMaquina = {
       codigo,
       activo,
@@ -57,31 +72,38 @@ export default function CrearMaquinaPage() {
       casino
     }
 
-    const res = await fetch("http://localhost:8000/maquinas", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(nuevaMaquina)
-    })
+    try {
+      const res = await fetch("http://localhost:8000/maquinas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nuevaMaquina)
+      })
 
-    if (res.ok) {
-      alert("Máquina registrada correctamente")
-      router.push("/machines")
-    } else {
-      alert("Error al registrar la máquina")
+      const data = await res.json()
+
+      if (res.ok) {
+        alert("Máquina registrada correctamente")
+        router.push("/machines")
+      } else {
+        setError(data.detail || "Error al registrar la máquina")
+      }
+    } catch (err) {
+      console.error(err)
+      setError("No se pudo conectar con el servidor")
     }
   }
 
   return (
     <div className="max-w-2xl mx-auto mt-10">
-      <Button variant="outline" className="mb-4" onClick={() => router.push("/machines")}>
-        ← Volver
-      </Button>
+      <Button variant="outline" className="mb-4" onClick={() => router.push("/machines")}>← Volver</Button>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-primary">Registrar Nueva Máquina</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
+          {error && <div className="text-red-600 text-sm border border-red-300 p-2 rounded">{error}</div>}
+
           <div>
             <Label>Código</Label>
             <Input value={codigo} onChange={(e) => setCodigo(e.target.value)} required />
@@ -90,16 +112,13 @@ export default function CrearMaquinaPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Marca</Label>
-              <Select value={marca} onValueChange={(value) => {
-                setMarca(value)
-                setModelo("") // reset modelo
-              }}>
+              <Select value={marca} onValueChange={(value) => setMarca(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona una marca" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.keys(MARCAS_MODELOS).map((marca) => (
-                    <SelectItem key={marca} value={marca}>{marca}</SelectItem>
+                  {marcasDisponibles.map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -112,7 +131,7 @@ export default function CrearMaquinaPage() {
                   <SelectValue placeholder={marca ? "Selecciona un modelo" : "Selecciona una marca primero"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {(MARCAS_MODELOS[marca] || []).map((m) => (
+                  {modelosDisponibles.map((m) => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
                 </SelectContent>
@@ -139,21 +158,15 @@ export default function CrearMaquinaPage() {
               </SelectTrigger>
               <SelectContent>
                 {casinos.map((c) => (
-                  <SelectItem key={c.id} value={c.nombre_casino}>
-                    {c.nombre_casino}
-                  </SelectItem>
+                  <SelectItem key={c.id} value={c.nombre_casino}>{c.nombre_casino}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => router.push("/machines")}>
-              Cancelar
-            </Button>
-            <Button className="bg-primary text-white" onClick={guardar}>
-              Guardar Máquina
-            </Button>
+            <Button variant="outline" onClick={() => router.push("/machines")}>Cancelar</Button>
+            <Button className="bg-primary text-white" onClick={guardar}>Guardar Máquina</Button>
           </div>
         </CardContent>
       </Card>

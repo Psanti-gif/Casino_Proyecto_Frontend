@@ -205,7 +205,6 @@ export default function MachinesPage() {
 
         <Button
           variant="ghost"
-          size="icon"
           onClick={() => {
             setCodigoBusqueda("")
             setMarcaFiltro("Todas")
@@ -216,7 +215,8 @@ export default function MachinesPage() {
             cargarMaquinas()
           }}
         >
-          <RefreshCcw className="h-4 w-4" />
+          <RefreshCcw className="h-4 w-4 mr-2" />
+          Limpiar Filtros
         </Button>
       </div>
 

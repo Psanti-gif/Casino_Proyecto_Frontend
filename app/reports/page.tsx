@@ -288,9 +288,10 @@ export default function ReportsPage() {
         <Button variant="default" onClick={() => setMostrarReporte(true)}>
           Mostrar Reporte
         </Button>
-        <Button variant="ghost" size="icon" onClick={handleRefrescar} title="Refrescar filtros">
-          <RefreshCcw className="h-4 w-4" />
-        </Button>
+        <Button variant="ghost" onClick={handleRefrescar}>
+  <RefreshCcw className="h-4 w-4 mr-2" />
+  Limpiar Filtros
+</Button>
         {registros.length > 0 && (
           <div className="flex gap-2">
             <Popover>

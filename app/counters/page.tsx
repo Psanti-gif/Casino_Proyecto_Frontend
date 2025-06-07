@@ -99,6 +99,7 @@ export default function CountersPage() {
         </div>
       </div>
 
+      {/* Filtros */}
       <div className="flex flex-wrap gap-4 items-end">
         <div>
           <label className="text-sm font-medium">Máquina</label>
@@ -152,7 +153,6 @@ export default function CountersPage() {
 
         <Button
           variant="ghost"
-          size="icon"
           onClick={() => {
             setFiltroCasino("Todos")
             setFiltroMaquina("")
@@ -161,7 +161,8 @@ export default function CountersPage() {
             setPaginaActual(1)
           }}
         >
-          <RefreshCcw className="h-4 w-4" />
+          <RefreshCcw className="h-4 w-4 mr-2" />
+          Limpiar Filtros
         </Button>
       </div>
 

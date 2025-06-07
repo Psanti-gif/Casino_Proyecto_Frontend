@@ -85,8 +85,17 @@ export default function CrearEncargadoPage() {
             <div>
               <Label className="text-sm">Telefono</Label>
               <Input
+                type="tel"
+                maxLength={10}
+                pattern="[0-9]*"
+                inputMode="numeric"
                 value={formulario.telefono}
-                onChange={(e) => handleChange("telefono", e.target.value)}
+                onChange={(e) => {
+                  const valor = e.target.value
+                  if (/^\d{0,10}$/.test(valor)) {
+                    handleChange("telefono", valor)
+                  }
+                }}
                 required
               />
             </div>

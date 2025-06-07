@@ -31,20 +31,15 @@ export default function EditarEncargadoPage() {
     fetch(`http://localhost:8000/buscar-encargado-id/${id}`)
       .then(res => res.json())
       .then(data => {
-        if (data?.mensaje) {
-          alert(data.mensaje)
-          router.push("/encargados")
-        } else {
-          setFormulario({
-            nombre: data.nombre,
-            telefono: data.telefono,
-            correo: data.correo,
-            estado: data.estado
-          })
-        }
+        setFormulario({
+          nombre: data.nombre || "",
+          telefono: data.telefono || "",
+          correo: data.correo || "",
+          estado: data.estado || "Activo"
+        })
       })
       .catch(() => {
-        alert("Error al cargar el encargado")
+        alert("No se pudo cargar la información del encargado")
         router.push("/encargados")
       })
   }, [id, router])
@@ -55,38 +50,26 @@ export default function EditarEncargadoPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    try {
-      const res = await fetch(`http://localhost:8000/editar-encargado/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formulario)
-      })
-
-      const texto = await res.text()
-      let data: any = {}
-
-      try {
-        data = JSON.parse(texto)
-      } catch {
-        alert("Error inesperado. No se pudo interpretar la respuesta.")
-        return
-      }
-
-      if (res.ok) {
-        alert("Encargado actualizado correctamente")
-        router.push("/encargados")
-      } else {
-        alert("Error: " + (data.detail || data.mensaje || "Error desconocido"))
-      }
-    } catch (error) {
-      alert("Error de red o servidor.")
-      console.error("Error al enviar los datos:", error)
+    const res = await fetch(`http://localhost:8000/editar-encargado/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formulario)
+    })
+    if (res.ok) {
+      alert("Encargado actualizado")
+      router.push("/encargados")
+    } else {
+      alert("Error al actualizar el encargado")
     }
   }
 
   return (
     <div className="max-w-xl mx-auto mt-10">
-      <Button variant="outline" className="mb-4" onClick={() => router.push("/encargados")}>
+      <Button
+        variant="outline"
+        className="mb-4"
+        onClick={() => router.push("/encargados")}
+      >
         ← Volver
       </Button>
 
@@ -107,8 +90,17 @@ export default function EditarEncargadoPage() {
             <div>
               <Label className="text-sm">Telefono</Label>
               <Input
+                type="tel"
+                maxLength={10}
+                pattern="[0-9]*"
+                inputMode="numeric"
                 value={formulario.telefono}
-                onChange={(e) => handleChange("telefono", e.target.value)}
+                onChange={(e) => {
+                  const valor = e.target.value
+                  if (/^\d{0,10}$/.test(valor)) {
+                    handleChange("telefono", valor)
+                  }
+                }}
                 required
               />
             </div>
@@ -123,7 +115,10 @@ export default function EditarEncargadoPage() {
             </div>
             <div>
               <Label className="text-sm">Estado</Label>
-              <Select value={formulario.estado} onValueChange={(v) => handleChange("estado", v)}>
+              <Select
+                value={formulario.estado}
+                onValueChange={(v) => handleChange("estado", v)}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar estado" />
                 </SelectTrigger>

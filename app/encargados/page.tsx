@@ -27,7 +27,6 @@ interface Encargado {
 
 export default function EncargadosPage() {
   const [encargados, setEncargados] = useState<Encargado[]>([])
-  const [busquedaId, setBusquedaId] = useState("")
   const [busquedaNombre, setBusquedaNombre] = useState("")
   const [filtroEstado, setFiltroEstado] = useState("Todos")
   const [paginaActual, setPaginaActual] = useState(1)
@@ -85,10 +84,9 @@ export default function EncargadosPage() {
     ordenColumna === col ? (ordenAscendente ? <ArrowUp size={14} /> : <ArrowDown size={14} />) : null
 
   let encargadosFiltrados = encargados.filter(e => {
-    const coincideId = busquedaId.trim() === "" || e.id.toString() === busquedaId.trim()
     const coincideNombre = e.nombre.toLowerCase().includes(busquedaNombre.toLowerCase())
     const coincideEstado = filtroEstado === "Todos" || e.estado === filtroEstado
-    return coincideId && coincideNombre && coincideEstado
+    return coincideNombre && coincideEstado
   })
 
   if (ordenColumna) {
@@ -110,7 +108,7 @@ export default function EncargadosPage() {
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-primary">Encargados</h1>
-          <p className="text-muted-foreground">Gestion de encargados de casinos</p>
+          <p className="text-muted-foreground">Gestión de encargados de casinos</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={() => router.push("/main")}>← Volver</Button>
@@ -125,18 +123,6 @@ export default function EncargadosPage() {
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-4 items-end">
-        <div>
-          <label className="text-sm font-medium">Buscar por ID</label>
-          <Input
-            placeholder="Ej: 1"
-            value={busquedaId}
-            onChange={(e) => setBusquedaId(e.target.value)}
-            className="w-[120px]"
-            type="number"
-            min="0"
-          />
-        </div>
-
         <div>
           <label className="text-sm font-medium">Buscar por Nombre</label>
           <Input
@@ -164,14 +150,14 @@ export default function EncargadosPage() {
           </Select>
         </div>
 
-        <Button variant="ghost" size="icon" onClick={() => {
-          setBusquedaId("")
+        <Button variant="ghost" onClick={() => {
           setBusquedaNombre("")
           setFiltroEstado("Todos")
           setOrdenColumna(null)
           cargarEncargados()
         }}>
-          <RefreshCcw className="h-4 w-4" />
+          <RefreshCcw className="h-4 w-4 mr-2" />
+          Limpiar Filtros
         </Button>
       </div>
 
@@ -184,9 +170,6 @@ export default function EncargadosPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead onClick={() => cambiarOrden("id")} className="cursor-pointer">
-                  ID {iconoOrden("id")}
-                </TableHead>
                 <TableHead onClick={() => cambiarOrden("nombre")} className="cursor-pointer">
                   Nombre {iconoOrden("nombre")}
                 </TableHead>
@@ -199,14 +182,13 @@ export default function EncargadosPage() {
             <TableBody>
               {encargadosVisibles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={5} className="h-24 text-center">
                     No se encontraron encargados.
                   </TableCell>
                 </TableRow>
               ) : (
                 encargadosVisibles.map(e => (
                   <TableRow key={e.id}>
-                    <TableCell>{e.id}</TableCell>
                     <TableCell>{e.nombre}</TableCell>
                     <TableCell>{e.telefono}</TableCell>
                     <TableCell>{e.correo}</TableCell>
@@ -238,7 +220,7 @@ export default function EncargadosPage() {
           </Table>
 
           <div className="flex justify-between items-center pt-4">
-            <span className="text-sm">Pagina {paginaActual} de {totalPaginas || 1}</span>
+            <span className="text-sm">Página {paginaActual} de {totalPaginas || 1}</span>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" disabled={paginaActual === 1}
                 onClick={() => setPaginaActual(paginaActual - 1)}>← Anterior</Button>

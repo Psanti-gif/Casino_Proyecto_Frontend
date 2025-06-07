@@ -202,7 +202,6 @@ export default function LocationsPage() {
 
         <Button
           variant="ghost"
-          size="icon"
           onClick={() => {
             setBusquedaCodigo("")
             setBusquedaNombre("")
@@ -213,7 +212,8 @@ export default function LocationsPage() {
             cargarLugares()
           }}
         >
-          <RefreshCcw className="h-4 w-4" />
+          <RefreshCcw className="h-4 w-4 mr-2" />
+          Limpiar Filtros
         </Button>
       </div>
 
