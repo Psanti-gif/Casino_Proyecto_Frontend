@@ -14,6 +14,7 @@ export default function ConfiguracionPage() {
   const [direccion, setDireccion] = useState("")
   const [nit, setNit] = useState("")
   const [correo, setCorreo] = useState("")
+  const [divisa, setDivisa] = useState("") // Nuevo estado para la divisa
   const [logoPreview, setLogoPreview] = useState("")
   const [archivoLogo, setArchivoLogo] = useState<File | null>(null)
   const [colorPrimario, setColorPrimario] = useState("#1d4ed8")
@@ -32,6 +33,7 @@ export default function ConfiguracionPage() {
         setDireccion(data.direccion || "")
         setNit(data.nit || "")
         setCorreo(data.correo || "")
+        setDivisa(data.divisa || "") // Cargar divisa si existe
         setColorPrimario(data.color_primario || "#1d4ed8")
         setColorFondo(data.color_fondo || "#ffffff")
         setLogoPreview(`http://localhost:8000${data.logo_url || ""}`)
@@ -54,6 +56,7 @@ export default function ConfiguracionPage() {
       formData.append("direccion", direccion)
       formData.append("nit", nit)
       formData.append("correo", correo)
+      formData.append("divisa", divisa) // Guardar divisa
       formData.append("color_primario", colorPrimario)
       formData.append("color_fondo", colorFondo)
       formData.append("modo_mantenimiento", String(modoMantenimiento))
@@ -104,6 +107,16 @@ export default function ConfiguracionPage() {
           <div>
             <Label>Nombre de la Empresa</Label>
             <Input value={nombreApp} onChange={(e) => setNombreApp(e.target.value)} required />
+          </div>
+
+          <div>
+            <Label>Divisa</Label>
+            <Input
+              value={divisa}
+              onChange={(e) => setDivisa(e.target.value)}
+              placeholder="Ej: COP, USD, EUR"
+              maxLength={10}
+            />
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
