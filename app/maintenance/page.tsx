@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react"
 
 export default function MaintenancePage() {
-  const [nombreEmpresa, setNombreEmpresa] = useState("")
+  const [nombreEmpresa, setNombreEmpresa] = useState("CUADRE CASINO")
   const [colorPrimario, setColorPrimario] = useState("#1d4ed8")
 
   useEffect(() => {
@@ -36,7 +36,10 @@ export default function MaintenancePage() {
           />
         </svg>
       </div>
-      <h1 className="text-4xl font-bold mb-4" style={{ color: colorPrimario }}>
+      <h1
+        className="text-4xl font-bold mb-4"
+        style={{ color: colorPrimario }}
+      >
         {nombreEmpresa} está en mantenimiento
       </h1>
       <p className="text-lg text-gray-600 max-w-xl">

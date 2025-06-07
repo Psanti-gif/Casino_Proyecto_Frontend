@@ -120,7 +120,7 @@ export default function MachinesPage() {
 
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <label className="text-sm font-medium">Buscar por Asset</label>
+          <label className="text-sm font-medium text-primary">Buscar por Asset</label>
           <Input
             placeholder="Ej: M-1001"
             value={codigoBusqueda}
@@ -133,7 +133,7 @@ export default function MachinesPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Estado</label>
+          <label className="text-sm font-medium text-primary">Estado</label>
           <Select value={estadoFiltro} onValueChange={(v) => {
             setEstadoFiltro(v)
             setPaginaActual(1)
@@ -150,7 +150,7 @@ export default function MachinesPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Marca</label>
+          <label className="text-sm font-medium text-primary">Marca</label>
           <Select value={marcaFiltro} onValueChange={(v) => {
             setMarcaFiltro(v)
             setPaginaActual(1)
@@ -168,7 +168,7 @@ export default function MachinesPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Modelo</label>
+          <label className="text-sm font-medium text-primary">Modelo</label>
           <Select value={modeloFiltro} onValueChange={(v) => {
             setModeloFiltro(v)
             setPaginaActual(1)
@@ -186,7 +186,7 @@ export default function MachinesPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Casino</label>
+          <label className="text-sm font-medium text-primary">Casino</label>
           <Select value={casinoFiltro} onValueChange={(v) => {
             setCasinoFiltro(v)
             setPaginaActual(1)
@@ -216,7 +216,8 @@ export default function MachinesPage() {
           }}
         >
           <RefreshCcw className="h-4 w-4 mr-2" />
-          Limpiar Filtros
+          <label htmlFor="" className="text-primary">Limpiar Filtros</label>
+          
         </Button>
       </div>
 

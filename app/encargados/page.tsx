@@ -124,7 +124,7 @@ export default function EncargadosPage() {
       {/* Filtros */}
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <label className="text-sm font-medium">Buscar por Nombre</label>
+          <label className="text-sm font-medium text-primary">Buscar por Nombre</label>
           <Input
             placeholder="Ej: Pedro"
             value={busquedaNombre}
@@ -134,7 +134,7 @@ export default function EncargadosPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Estado</label>
+          <label className="text-sm font-medium text-primary">Estado</label>
           <Select value={filtroEstado} onValueChange={(v) => {
             setFiltroEstado(v)
             setPaginaActual(1)
@@ -156,8 +156,9 @@ export default function EncargadosPage() {
           setOrdenColumna(null)
           cargarEncargados()
         }}>
-          <RefreshCcw className="h-4 w-4 mr-2" />
-          Limpiar Filtros
+          <RefreshCcw className="h-4 w-4 mr-2 text-primary" />
+          <label className="text-primary">Limpiar Filtros</label>
+          
         </Button>
       </div>
 

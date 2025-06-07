@@ -102,7 +102,7 @@ export default function CountersPage() {
       {/* Filtros */}
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <label className="text-sm font-medium">Máquina</label>
+          <label className="text-sm font-medium text-primary">Máquina</label>
           <Input
             placeholder="Buscar por máquina"
             value={filtroMaquina}
@@ -112,7 +112,7 @@ export default function CountersPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Casino</label>
+          <label className="text-sm font-medium text-primary">Casino</label>
           <Select value={filtroCasino} onValueChange={setFiltroCasino}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Filtrar por casino" />
@@ -127,7 +127,7 @@ export default function CountersPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Fecha</label>
+          <label className="text-sm font-medium text-primary">Fecha</label>
           <Input
             type="date"
             value={filtroFecha}
@@ -138,7 +138,7 @@ export default function CountersPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">¿Hubo corte?</label>
+          <label className="text-sm font-medium text-primary">¿Hubo corte?</label>
           <Select value={filtroRecorte} onValueChange={setFiltroRecorte}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Filtrar por corte" />
@@ -161,8 +161,8 @@ export default function CountersPage() {
             setPaginaActual(1)
           }}
         >
-          <RefreshCcw className="h-4 w-4 mr-2" />
-          Limpiar Filtros
+<RefreshCcw className="h-4 w-4 mr-2 text-primary" />
+          <label className="text-primary">Limpiar Filtros</label>
         </Button>
       </div>
 

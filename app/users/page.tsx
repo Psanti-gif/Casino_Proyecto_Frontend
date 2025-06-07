@@ -128,7 +128,7 @@ export default function UsersPage() {
       {/* Filtros */}
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <label className="text-sm font-medium">Buscar por ID</label>
+          <label className="text-sm font-medium text-primary">Buscar por ID</label>
           <Input
             placeholder="Ej: 1"
             value={busquedaId}
@@ -140,7 +140,7 @@ export default function UsersPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Buscar por Usuario</label>
+          <label className="text-sm font-medium text-primary">Buscar por Usuario</label>
           <Input
             placeholder="Ej: juanperez"
             value={busquedaUsuario}
@@ -150,7 +150,7 @@ export default function UsersPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Rol</label>
+          <label className="text-sm font-medium text-primary">Rol</label>
           <Select value={filtroRol} onValueChange={(v) => {
             setFiltroRol(v)
             setPaginaActual(1)
@@ -168,7 +168,7 @@ export default function UsersPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Estado</label>
+          <label className="text-sm font-medium text-primary">Estado</label>
           <Select value={filtroEstado} onValueChange={(v) => {
             setFiltroEstado(v)
             setPaginaActual(1)
@@ -196,8 +196,8 @@ export default function UsersPage() {
             recargar()
           }}
         >
-          <RefreshCcw className="h-4 w-4 mr-2" />
-          Limpiar Filtros
+<RefreshCcw className="h-4 w-4 mr-2 text-primary" />
+          <label className="text-primary">Limpiar Filtros</label>
         </Button>
       </div>
 

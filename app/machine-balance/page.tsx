@@ -406,7 +406,7 @@ export default function MachineBalancePage() {
     <div className="flex flex-col gap-5">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Balance por Máquina</h1>
+          <h1 className="text-3xl font-bold text-primary">Balance por Máquina</h1>
           <p className="text-muted-foreground">Consulta el balance de ganancias por máquina en un período específico</p>
         </div>
         <Button variant="outline" onClick={() => router.push("/")}>

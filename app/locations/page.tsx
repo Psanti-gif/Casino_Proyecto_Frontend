@@ -139,7 +139,7 @@ export default function LocationsPage() {
 
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <label className="text-sm font-medium">Buscar por código</label>
+          <label className="text-sm font-medium text-primary">Buscar por código</label>
           <Input
             placeholder="Ej: M1"
             value={busquedaCodigo}
@@ -152,7 +152,7 @@ export default function LocationsPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Buscar por nombre</label>
+          <label className="text-sm font-medium text-primary">Buscar por nombre</label>
           <Input
             placeholder="Ej: Casino Cali"
             value={busquedaNombre}
@@ -165,7 +165,7 @@ export default function LocationsPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Encargado</label>
+          <label className="text-sm font-medium text-primary">Encargado</label>
           <Select value={encargadoFiltro} onValueChange={(v) => {
             setEncargadoFiltro(v)
             setPaginaActual(1)
@@ -183,7 +183,7 @@ export default function LocationsPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Estado</label>
+          <label className="text-sm font-medium text-primary">Estado</label>
           <Select value={estadoFiltro} onValueChange={(v) => {
             setEstadoFiltro(v)
             setPaginaActual(1)
@@ -213,7 +213,8 @@ export default function LocationsPage() {
           }}
         >
           <RefreshCcw className="h-4 w-4 mr-2" />
-          Limpiar Filtros
+          <label className="text-primary">Limpiar Filtros</label>
+          
         </Button>
       </div>
 

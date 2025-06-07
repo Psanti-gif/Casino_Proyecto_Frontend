@@ -63,7 +63,6 @@ export default function ReportsPage() {
       if (maquinaFiltro && maquinaFiltro !== "Todos") params.maquinas = [maquinaFiltro];
       if (modeloFiltro && modeloFiltro !== "Todos") params.modelo = modeloFiltro;
       if (marcaFiltro && marcaFiltro !== "Todos") params.marca = marcaFiltro;
-      // Eliminar ciudadFiltro
       const data = await fetchReporte(params);
       const registrosData = Array.isArray(data.registros) ? data.registros : [];
       setRegistros(registrosData);
@@ -81,28 +80,19 @@ export default function ReportsPage() {
       cargarDatos()
       setMostrarReporte(false)
     }
-    // eslint-disable-next-line
   }, [mostrarReporte])
 
   useEffect(() => {
-    // Cargar casinos al montar
-    fetchCasinos().then((data) => {
-      setCasinos(data);
-    }).catch((error) => {
-      console.error("Error al cargar los casinos:", error);
-    });
-  }, []);
+    fetchCasinos().then(setCasinos).catch(console.error)
+  }, [])
 
   useEffect(() => {
-    // Cargar máquinas y modelos al montar
     fetchMaquinas().then((data) => {
-      setMaquinas(data);
-      setModelos(Array.from(new Set(data.map((m: any) => m.modelo))));
-      setMarcas(Array.from(new Set(data.map((m: any) => m.marca))));
-    }).catch((error) => {
-      console.error("Error al cargar las máquinas:", error);
-    });
-  }, []);
+      setMaquinas(data)
+      setModelos([...new Set(data.map((m: any) => m.modelo))])
+      setMarcas([...new Set(data.map((m: any) => m.marca))])
+    }).catch(console.error)
+  }, [])
 
   const utilidadTotal = Array.isArray(registros)
     ? registros.reduce((acc, r) => acc + r.utilidad, 0)
@@ -119,59 +109,22 @@ export default function ReportsPage() {
       if (maquinaFiltro && maquinaFiltro !== "Todos") params.maquinas = [maquinaFiltro];
       if (modeloFiltro && modeloFiltro !== "Todos") params.modelo = modeloFiltro;
       if (marcaFiltro && marcaFiltro !== "Todos") params.marca = marcaFiltro;
-      // Eliminar ciudadFiltro
-      await exportarReporte({
-        formato,
-        ...params
-      });
+      await exportarReporte({ formato, ...params });
     } catch (error: any) {
       alert(`Error al exportar el reporte: ${error.message || 'Error desconocido'}`);
     }
   };
 
-  useEffect(() => {
-    console.log("Casinos cargados:", casinos);
-  }, [casinos]);
-
-  useEffect(() => {
-    if (casinoFiltro) {
-      setMostrarReporte(false); // Reset mostrarReporte to ensure user clicks 'Mostrar Reporte' to fetch data
-    }
-  }, [casinoFiltro]);
-
-  useEffect(() => {
-    console.log("Casino seleccionado:", casinoFiltro);
-  }, [casinoFiltro]);
-
-  useEffect(() => {
-    if (!mostrarReporte) {
-      fetchCasinos().then((data) => {
-        setCasinos(data);
-      }).catch((error) => {
-        console.error("Error al recargar los casinos:", error);
-      });
-    }
-  }, [mostrarReporte]);
-
-  // Filtrar modelos según la máquina seleccionada
   const modelosFiltrados = maquinaFiltro && maquinaFiltro !== "Todos"
-    ? modelos.filter((m) => {
-        const maquina = maquinas.find((maq) => maq.codigo === maquinaFiltro);
-        return maquina && maquina.modelo === m;
-      })
+    ? modelos.filter((m) => maquinas.find((maq) => maq.codigo === maquinaFiltro)?.modelo === m)
     : [];
 
   const marcasFiltradas = maquinaFiltro && maquinaFiltro !== "Todos"
-    ? marcas.filter((marca) => {
-        const maquina = maquinas.find((maq) => maq.codigo === maquinaFiltro);
-        return maquina && maquina.marca === marca;
-      })
+    ? marcas.filter((marca) => maquinas.find((maq) => maq.codigo === maquinaFiltro)?.marca === marca)
     : [];
 
-  // Filtros que actualizan el reporte automáticamente
   useEffect(() => {
     cargarDatos();
-    // eslint-disable-next-line
   }, [casinoFiltro, maquinaFiltro, modeloFiltro, marcaFiltro, fechaInicio, fechaFin]);
 
   const handleRefrescar = () => {
@@ -195,9 +148,10 @@ export default function ReportsPage() {
           <span className="text-lg">←</span> Volver
         </Button>
       </div>
+
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <label className="text-sm font-medium">Fecha Inicio</label>
+          <label className="text-sm font-medium text-primary">Fecha Inicio</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[200px] justify-start text-left">
@@ -212,7 +166,7 @@ export default function ReportsPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Fecha Fin</label>
+          <label className="text-sm font-medium text-primary">Fecha Fin</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="w-[200px] justify-start text-left">
@@ -227,7 +181,7 @@ export default function ReportsPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Casino</label>
+          <label className="text-sm font-medium text-primary">Casino</label>
           <Select value={casinoFiltro} onValueChange={setCasinoFiltro}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Casino" />
@@ -244,7 +198,7 @@ export default function ReportsPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Máquina</label>
+          <label className="text-sm font-medium text-primary">Máquina</label>
           <Select value={maquinaFiltro} onValueChange={setMaquinaFiltro}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Máquina" />
@@ -257,8 +211,9 @@ export default function ReportsPage() {
             </SelectContent>
           </Select>
         </div>
+
         <div>
-          <label className="text-sm font-medium">Modelo</label>
+          <label className="text-sm font-medium text-primary">Modelo</label>
           <Select value={modeloFiltro} onValueChange={setModeloFiltro} disabled={!maquinaFiltro || maquinaFiltro === "Todos"}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Modelo" />
@@ -271,8 +226,9 @@ export default function ReportsPage() {
             </SelectContent>
           </Select>
         </div>
+
         <div>
-          <label className="text-sm font-medium">Marca</label>
+          <label className="text-sm font-medium text-primary">Marca</label>
           <Select value={marcaFiltro} onValueChange={setMarcaFiltro} disabled={!maquinaFiltro || maquinaFiltro === "Todos"}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Marca" />
@@ -285,13 +241,15 @@ export default function ReportsPage() {
             </SelectContent>
           </Select>
         </div>
+
         <Button variant="default" onClick={() => setMostrarReporte(true)}>
           Mostrar Reporte
         </Button>
         <Button variant="ghost" onClick={handleRefrescar}>
-  <RefreshCcw className="h-4 w-4 mr-2" />
-  Limpiar Filtros
-</Button>
+        <RefreshCcw className="h-4 w-4 mr-2 text-primary" />
+          <label className="text-primary">Limpiar Filtros</label>
+        </Button>
+
         {registros.length > 0 && (
           <div className="flex gap-2">
             <Popover>
@@ -303,19 +261,11 @@ export default function ReportsPage() {
               </PopoverTrigger>
               <PopoverContent className="w-48">
                 <div className="flex flex-col gap-2">
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => handleExportarReporte('pdf')}
-                    className="flex items-center justify-start gap-1"
-                  >
+                  <Button variant="ghost" onClick={() => handleExportarReporte('pdf')} className="flex items-center justify-start gap-1">
                     <FileText className="h-4 w-4 mr-1" />
                     Exportar PDF
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => handleExportarReporte('excel')}
-                    className="flex items-center justify-start gap-1"
-                  >
+                  <Button variant="ghost" onClick={() => handleExportarReporte('excel')} className="flex items-center justify-start gap-1">
                     <FileSpreadsheet className="h-4 w-4 mr-1" />
                     Exportar Excel
                   </Button>

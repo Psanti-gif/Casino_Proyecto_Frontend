@@ -105,7 +105,7 @@ export default function CasinoBalancePage() {
     <div className="flex flex-col gap-5">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Balance por Casino</h1>
+          <h1 className="text-3xl font-bold text-primary">Balance por Casino</h1>
           <p className="text-muted-foreground">
             Consulta el balance total de cada casino y sus máquinas.
           </p>

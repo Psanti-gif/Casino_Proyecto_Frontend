@@ -23,6 +23,7 @@ export default function ConfiguracionPage() {
 
   const [marcas, setMarcas] = useState("")
   const [modelos, setModelos] = useState("")
+  const [vistaPrevia, setVistaPrevia] = useState<Record<string, string[]>>({})
 
   const [cargando, setCargando] = useState(true)
   const router = useRouter()
@@ -49,7 +50,18 @@ export default function ConfiguracionPage() {
       }
     }
 
+    const obtenerMarcasModelos = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/marcas_modelos.json")
+        const data = await res.json()
+        setVistaPrevia(data)
+      } catch (error) {
+        console.error("Error al cargar marcas y modelos:", error)
+      }
+    }
+
     obtenerConfiguracion()
+    obtenerMarcasModelos()
   }, [])
 
   const guardarConfiguracion = async () => {
@@ -89,7 +101,7 @@ export default function ConfiguracionPage() {
   const guardarMarcasYModelos = async () => {
     try {
       const formData = new FormData()
-      formData.append("nombre_empresa", nombreApp) // requerido en backend
+      formData.append("nombre_empresa", nombreApp)
       formData.append("telefono", telefono)
       formData.append("direccion", direccion)
       formData.append("nit", nit)
@@ -114,6 +126,7 @@ export default function ConfiguracionPage() {
         alert("Marcas y modelos agregados correctamente")
         setMarcas("")
         setModelos("")
+        window.location.reload()
       } else {
         alert("Error al guardar marcas/modelos")
       }
@@ -129,7 +142,7 @@ export default function ConfiguracionPage() {
     <div className="max-w-xl mx-auto mt-10 space-y-8">
       <Button variant="outline" onClick={() => router.push("/main")}>← Volver</Button>
 
-      {/* Formulario principal de configuración */}
+      {/* Formulario principal */}
       <Card>
         <CardHeader className="text-primary">
           <CardTitle>Configuración General</CardTitle>
@@ -165,28 +178,26 @@ export default function ConfiguracionPage() {
           </div>
 
           <div>
-            <Label>Logo</Label>
-            <Input type="file" accept="image/png, image/jpeg" onChange={(e) => {
-              const archivo = e.target.files?.[0]
-              if (archivo) {
-                setArchivoLogo(archivo)
-                const preview = URL.createObjectURL(archivo)
-                setLogoPreview(preview)
-              }
-            }} />
-          </div>
+  <Label>Logo</Label>
+  <Input
+    type="file"
+    accept="image/png, image/jpeg"
+    onChange={(e) => {
+      const archivo = e.target.files?.[0]
+      if (archivo) {
+        setArchivoLogo(archivo)
+      }
+    }}
+  />
+  <small className="text-muted-foreground">Subir archivo</small>
+</div>
 
-          <div className="flex items-center gap-4">
-            <Label className="text-sm">Vista previa:</Label>
-            {logoPreview && <img src={logoPreview} alt="Logo" className="h-10" />}
-          </div>
 
           <div className="flex items-center justify-between border p-3 rounded">
             <div>
               <h4 className="font-medium">Modo Mantenimiento</h4>
               <p className="text-sm text-muted-foreground">
-                Al activarlo, el sistema se desactiva temporalmente.<br /><br />
-                Para desactivarlo, visita:<br />
+                Para desactivarlo visita:<br />
                 <code>http://localhost:8000/modo-mantenimiento-off?clave=admin123</code>
               </p>
             </div>
@@ -200,7 +211,7 @@ export default function ConfiguracionPage() {
         </CardContent>
       </Card>
 
-      {/* Formulario separado para agregar marcas y modelos */}
+      {/* Formulario separado para marcas y modelos */}
       <Card>
         <CardHeader className="text-primary">
           <CardTitle>Agregar Marcas y Modelos</CardTitle>
@@ -208,25 +219,38 @@ export default function ConfiguracionPage() {
         <CardContent className="grid gap-4">
           <div>
             <Label>Marcas de Máquinas</Label>
-            <Input
-              value={marcas}
-              onChange={(e) => setMarcas(e.target.value)}
-              placeholder="Ej: IGT, Novomatic"
-            />
+            <Input value={marcas} onChange={(e) => setMarcas(e.target.value)} placeholder="Ej: IGT, Novomatic" />
           </div>
           <div>
             <Label>Modelos de Máquinas</Label>
-            <Input
-              value={modelos}
-              onChange={(e) => setModelos(e.target.value)}
-              placeholder="Ej: S2000, Game King"
-            />
+            <Input value={modelos} onChange={(e) => setModelos(e.target.value)} placeholder="Ej: S2000, Game King" />
           </div>
           <div className="flex justify-end">
             <Button onClick={guardarMarcasYModelos}>Guardar Marcas y Modelos</Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Vista previa */}
+      {Object.keys(vistaPrevia).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-primary">Vista previa de Marcas y Modelos</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {Object.entries(vistaPrevia).map(([marca, modelos]) => (
+              <div key={marca}>
+                <strong>{marca}</strong>
+                <ul className="ml-4 list-disc text-sm text-muted-foreground">
+                  {modelos.map((modelo, i) => (
+                    <li key={i}>{modelo}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
