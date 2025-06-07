@@ -22,6 +22,7 @@ export default function LoginPage() {
 
   const [nombreApp, setNombreApp] = useState("CUADRE CASINO")
   const [logoUrl, setLogoUrl] = useState("")
+  const [ipLocal, setIpLocal] = useState("")
 
   useEffect(() => {
     const cargarConfiguracion = async () => {
@@ -36,6 +37,10 @@ export default function LoginPage() {
     }
 
     cargarConfiguracion()
+
+    if (typeof window !== "undefined") {
+      setIpLocal(window.location.hostname)
+    }
   }, [])
 
   useEffect(() => {
@@ -91,6 +96,11 @@ export default function LoginPage() {
           </CardTitle>
           <CardDescription>
             Ingrese sus credenciales para acceder al sistema
+            <br />
+            <br />
+            <span className="text-sm text-muted-foreground">
+              Tambien puede ingresar desde la dirección: {ipLocal}:3000
+            </span>
           </CardDescription>
         </CardHeader>
 
