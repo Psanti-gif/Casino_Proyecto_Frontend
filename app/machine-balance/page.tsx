@@ -42,6 +42,7 @@ export default function MachineBalancePage() {
   const [machines, setMachines] = useState<Machine[]>([]);
   const [loadingLocations, setLoadingLocations] = useState<boolean>(true);
   const [loadingMachines, setLoadingMachines] = useState<boolean>(true);
+  const [divisa, setDivisa] = useState("")
   const router = useRouter();
 
   type ApiLocation = {
@@ -130,6 +131,14 @@ export default function MachineBalancePage() {
     fetchMachines();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locations]); // Espera a que locations esté cargado para mapear correctamente
+
+  // Cargar la divisa desde la configuración
+  useEffect(() => {
+    fetch("http://localhost:8000/configuracion")
+      .then(res => res.json())
+      .then(data => setDivisa(data.divisa || ""))
+      .catch(() => setDivisa(""))
+  }, [])
 
   // Handle the export to CSV
   const handleExportCSV = () => {
@@ -609,7 +618,7 @@ export default function MachineBalancePage() {
                             variant={balance.netProfit >= 0 ? "success" : "destructive"}
                             className="justify-center w-24"
                           >
-                            {formatCurrency(balance.netProfit)}
+                            {formatCurrency(balance.netProfit, divisa, false)} {divisa}
                           </Badge>
                         </TableCell>
                       </TableRow>
@@ -626,7 +635,7 @@ export default function MachineBalancePage() {
                 <Badge variant="success" className="text-base px-4 py-2">
                   {formatCurrency(
                     machineBalances.reduce((acc, balance) => acc + (balance.netProfit ?? 0), 0)
-                  )}
+                  )} {divisa}
                 </Badge>
               </div>
             </div>

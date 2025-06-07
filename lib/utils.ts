@@ -16,12 +16,12 @@ export function formatDate(date: Date | string): string {
 }
 
 // Format currency
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('es-ES', {
-    style: 'currency',
-    currency: 'USD',
+export function formatCurrency(value: number, currency: string = "COP", showCurrency: boolean = true) {
+  return new Intl.NumberFormat("es-CO", {
+    style: showCurrency ? "currency" : "decimal",
+    currency,
     minimumFractionDigits: 2,
-  }).format(amount);
+  }).format(value);
 }
 
 // Calculate profit based on counters
