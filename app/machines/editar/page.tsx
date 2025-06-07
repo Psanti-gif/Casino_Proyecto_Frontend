@@ -108,11 +108,10 @@ export default function EditarMaquinaPage() {
           <CardTitle className="text-primary">Editar Máquina</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4">
-        <div>
-        <Label>Código</Label>
-        <Input value={codigo} disabled />
-        </div>
-
+          <div>
+            <Label>Código</Label>
+            <Input value={codigo} disabled />
+          </div>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
@@ -153,7 +152,12 @@ export default function EditarMaquinaPage() {
             </div>
             <div>
               <Label>Denominación</Label>
-              <Input type="number" step="0.01" value={denominacion} onChange={(e) => setDenominacion(e.target.value)} required />
+              <Input
+                type="number"
+                step="0.01"
+                value={denominacion}
+                disabled
+              />
             </div>
           </div>
 

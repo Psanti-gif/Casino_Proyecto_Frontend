@@ -17,11 +17,11 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   {
-    title: "Máquinas",
-    description: "Gestión de máquinas",
-    href: "/machines",
-    icon: <Slot className="h-6 w-6" />,
-    roles: ['Admin', 'Support', 'Operator'],
+    title: "Encargados",
+    description: "Gestión de encargados de casino",
+    href: "/encargados",
+    icon: <Users className="h-6 w-6" />,
+    roles: ['Admin', 'Support'],
   },
   {
     title: "Casinos",
@@ -31,11 +31,11 @@ const menuItems: MenuItem[] = [
     roles: ['Admin', 'Support'],
   },
   {
-    title: "Encargados",
-    description: "Gestión de encargados de casino",
-    href: "/encargados",
-    icon: <Users className="h-6 w-6" />,
-    roles: ['Admin', 'Support'],
+    title: "Máquinas",
+    description: "Gestión de máquinas",
+    href: "/machines",
+    icon: <Slot className="h-6 w-6" />,
+    roles: ['Admin', 'Support', 'Operator'],
   },
   {
     title: "Contadores",

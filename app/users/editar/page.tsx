@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -10,6 +9,7 @@ import { Label } from "@radix-ui/react-label"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem
 } from "@/components/ui/select"
+import { Eye, EyeOff } from "lucide-react"
 
 export default function EditarUsuarioPage() {
   const router = useRouter()
@@ -20,6 +20,8 @@ export default function EditarUsuarioPage() {
     nombre_usuario: "", nombre_completo: "", correo: "",
     rol: "Operator", estado: "Activo", contrasena: ""
   })
+
+  const [verContrasena, setVerContrasena] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -86,7 +88,26 @@ export default function EditarUsuarioPage() {
                 <SelectContent><SelectItem value="Activo">Activo</SelectItem><SelectItem value="Inactivo">Inactivo</SelectItem></SelectContent>
               </Select>
             </div>
-            <div><Label>Contraseña</Label><Input type="password" value={form.contrasena} onChange={(e) => handleChange("contrasena", e.target.value)} required /></div>
+
+            <div>
+              <Label>Contraseña</Label>
+              <div className="relative">
+                <Input
+                  type={verContrasena ? "text" : "password"}
+                  value={form.contrasena}
+                  onChange={(e) => handleChange("contrasena", e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerContrasena(!verContrasena)}
+                  className="absolute right-3 top-2 text-gray-500"
+                >
+                  {verContrasena ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
             <div className="flex justify-end gap-2">
               <Button variant="outline" type="button" onClick={() => router.push("/users")}>Cancelar</Button>
               <Button type="submit">Guardar Cambios</Button>
