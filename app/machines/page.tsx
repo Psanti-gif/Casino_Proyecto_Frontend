@@ -34,7 +34,6 @@ export default function MachinesPage() {
   const [modeloFiltro, setModeloFiltro] = useState("Todos")
   const [casinoFiltro, setCasinoFiltro] = useState("Todos")
   const [estadoFiltro, setEstadoFiltro] = useState("Todos")
-  const [idBusqueda, setIdBusqueda] = useState("")
   const [codigoBusqueda, setCodigoBusqueda] = useState("")
   const [paginaActual, setPaginaActual] = useState(1)
   const maquinasPorPagina = 5
@@ -64,11 +63,10 @@ export default function MachinesPage() {
 
   const exportarAExcel = () => {
     const data = filtradas.map((m) => ({
-      ID: m.id,
-      Código: m.codigo,
+      Asset: m.codigo,
       Marca: m.marca,
       Modelo: m.modelo,
-      Denominación: `$${m.denominacion.toFixed(2)}`,
+      Denominacion: `$${m.denominacion.toFixed(2)}`,
       Casino: m.casino,
       Estado: m.activo === 1 ? "Activa" : "Inactiva",
     }))
@@ -95,7 +93,6 @@ export default function MachinesPage() {
     (estadoFiltro === "Todos" ||
       (estadoFiltro === "Activa" && m.activo === 1) ||
       (estadoFiltro === "Inactiva" && m.activo !== 1)) &&
-    (idBusqueda.trim() === "" || m.id.toString() === idBusqueda.trim()) &&
     (codigoBusqueda.trim() === "" || m.codigo.toLowerCase().includes(codigoBusqueda.toLowerCase()))
   )
 
@@ -118,28 +115,12 @@ export default function MachinesPage() {
           <Button className="bg-primary text-white" onClick={() => router.push("/machines/crear")}>
             <PlusCircle className="mr-2 h-4 w-4" /> Nueva Máquina
           </Button>
-
         </div>
       </div>
 
       <div className="flex flex-wrap gap-4 items-end">
         <div>
-          <label className="text-sm font-medium">Buscar por ID</label>
-          <Input
-            placeholder="Ej: 1"
-            value={idBusqueda}
-            onChange={(e) => {
-              setIdBusqueda(e.target.value)
-              setPaginaActual(1)
-            }}
-            className="w-[120px]"
-            type="number"
-            min="0"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm font-medium">Buscar por Código</label>
+          <label className="text-sm font-medium">Buscar por Asset</label>
           <Input
             placeholder="Ej: M-1001"
             value={codigoBusqueda}
@@ -226,7 +207,6 @@ export default function MachinesPage() {
           variant="ghost"
           size="icon"
           onClick={() => {
-            setIdBusqueda("")
             setCodigoBusqueda("")
             setMarcaFiltro("Todas")
             setModeloFiltro("Todos")
@@ -248,8 +228,7 @@ export default function MachinesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Código</TableHead>
+                <TableHead>Asset</TableHead>
                 <TableHead>Marca</TableHead>
                 <TableHead>Modelo</TableHead>
                 <TableHead>Denominación</TableHead>
@@ -261,14 +240,13 @@ export default function MachinesPage() {
             <TableBody>
               {maquinasVisibles.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     No se encontraron máquinas.
                   </TableCell>
                 </TableRow>
               ) : (
                 maquinasVisibles.map((m) => (
                   <TableRow key={m.id}>
-                    <TableCell>{m.id}</TableCell>
                     <TableCell>{m.codigo}</TableCell>
                     <TableCell>{m.marca}</TableCell>
                     <TableCell>{m.modelo}</TableCell>
@@ -320,7 +298,6 @@ export default function MachinesPage() {
               >Siguiente →</Button>
             </div>
           </div>
-
         </CardContent>
       </Card>
     </div>

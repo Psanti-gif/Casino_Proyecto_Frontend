@@ -13,9 +13,11 @@ import {
   SelectContent,
   SelectItem
 } from "@/components/ui/select"
+import { Eye, EyeOff } from "lucide-react"
 
 export default function CrearUsuarioPage() {
   const router = useRouter()
+  const [verContrasena, setVerContrasena] = useState(false)
   const [formulario, setFormulario] = useState({
     nombre_usuario: "",
     nombre_completo: "",
@@ -132,12 +134,21 @@ export default function CrearUsuarioPage() {
             </div>
             <div>
               <Label className="text-sm">Contraseña</Label>
-              <Input
-                type="password"
-                value={formulario.contrasena}
-                onChange={(e) => handleChange("contrasena", e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  type={verContrasena ? "text" : "password"}
+                  value={formulario.contrasena}
+                  onChange={(e) => handleChange("contrasena", e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setVerContrasena(!verContrasena)}
+                  className="absolute right-3 top-2 text-gray-500"
+                >
+                  {verContrasena ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <Button

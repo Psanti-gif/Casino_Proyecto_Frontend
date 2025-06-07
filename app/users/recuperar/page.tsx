@@ -104,9 +104,14 @@ export default function RecuperarContrasenaPage() {
                   onChange={(e) => setNombreUsuario(e.target.value)}
                 />
               </div>
-              <Button onClick={solicitarCodigo} disabled={cargando}>
-                Solicitar Código
-              </Button>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => router.push("/login")}>
+                  Cancelar
+                </Button>
+                <Button onClick={solicitarCodigo} disabled={cargando}>
+                  Solicitar Código
+                </Button>
+              </div>
             </>
           )}
 
