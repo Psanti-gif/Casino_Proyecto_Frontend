@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface Lugar {
   id: number
@@ -23,6 +24,8 @@ export default function CrearMaquinaPage() {
   const [numeroSerie, setNumeroSerie] = useState("")
   const [denominacion, setDenominacion] = useState("")
   const [casino, setCasino] = useState("")
+  const [tieneParticipacion, setTieneParticipacion] = useState(false)
+  const [porcentaje, setPorcentaje] = useState("0")
   const [casinos, setCasinos] = useState<Lugar[]>([])
   const [marcasDisponibles, setMarcasDisponibles] = useState<string[]>([])
   const [modelosDisponibles, setModelosDisponibles] = useState<string[]>([])
@@ -60,7 +63,7 @@ export default function CrearMaquinaPage() {
   }, [marca, marcasModelos])
 
   const guardar = async () => {
-    setError("") // limpiar error anterior
+    setError("")
 
     const nuevaMaquina = {
       codigo,
@@ -69,7 +72,8 @@ export default function CrearMaquinaPage() {
       modelo,
       numero_serie: numeroSerie,
       denominacion: parseFloat(denominacion),
-      casino
+      casino,
+      porcentaje_participacion: tieneParticipacion ? parseFloat(porcentaje) : 0
     }
 
     try {
@@ -112,7 +116,7 @@ export default function CrearMaquinaPage() {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label>Marca</Label>
-              <Select value={marca} onValueChange={(value) => setMarca(value)}>
+              <Select value={marca} onValueChange={setMarca}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona una marca" />
                 </SelectTrigger>
@@ -162,6 +166,30 @@ export default function CrearMaquinaPage() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="tieneParticipacion"
+                checked={tieneParticipacion}
+                onCheckedChange={(value) => setTieneParticipacion(Boolean(value))}
+              />
+              <Label htmlFor="tieneParticipacion">¿Tiene participación?</Label>
+            </div>
+
+            <div>
+              <Label>Porcentaje de Participación</Label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                value={porcentaje}
+                disabled={!tieneParticipacion}
+                onChange={(e) => setPorcentaje(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

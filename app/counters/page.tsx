@@ -138,7 +138,7 @@ export default function CountersPage() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-primary">¿Hubo corte?</label>
+          <label className="text-sm font-medium text-primary">Borrado</label>
           <Select value={filtroRecorte} onValueChange={setFiltroRecorte}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Filtrar por corte" />

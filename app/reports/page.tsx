@@ -285,41 +285,52 @@ export default function ReportsPage() {
             <div className="text-center text-muted-foreground py-8">No hay resultados para los filtros seleccionados.</div>
           ) : (
             <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha Inicio</TableHead>
-                  <TableHead>Fecha Fin</TableHead>
-                  <TableHead>Casino</TableHead>
-                  <TableHead>Máquina</TableHead>
-                  <TableHead className="text-right">IN</TableHead>
-                  <TableHead className="text-right">OUT</TableHead>
-                  <TableHead className="text-right">JACKPOT</TableHead>
-                  <TableHead className="text-right">BILLETERO</TableHead>
-                  <TableHead className="text-right">UTILIDAD</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {registros.map((r, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{r.fecha_inicio || "-"}</TableCell>
-                    <TableCell>{r.fecha_fin || "-"}</TableCell>
-                    <TableCell>{r.casino}</TableCell>
-                    <TableCell>{r.maquina}</TableCell>
-                    <TableCell className="text-right">{r.in?.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{r.out?.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{r.jackpot?.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{r.billetero?.toLocaleString()}</TableCell>
-                    <TableCell className="text-right font-semibold text-green-600">{r.utilidad?.toLocaleString()}</TableCell>
-                  </TableRow>
-                ))}
-                <TableRow>
-                  <TableCell colSpan={8} className="text-right font-bold">Total</TableCell>
-                  <TableCell className="text-right font-bold text-green-700">
-                    {utilidadTotal.toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Fecha Inicio</TableHead>
+      <TableHead>Fecha Fin</TableHead>
+      <TableHead>Casino</TableHead>
+      <TableHead>Máquina</TableHead>
+      <TableHead className="text-right">IN</TableHead>
+      <TableHead className="text-right">OUT</TableHead>
+      <TableHead className="text-right">JACKPOT</TableHead>
+      <TableHead className="text-right">BILLETERO</TableHead>
+      <TableHead className="text-right">PARTICIPACIÓN</TableHead>
+      <TableHead className="text-right">UTILIDAD</TableHead>
+      <TableHead className="text-right">PARTICIPANTE</TableHead>
+      <TableHead className="text-right">OPERADOR</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {registros.map((r, i) => (
+      <TableRow key={i}>
+        <TableCell>{r.fecha_inicio || "-"}</TableCell>
+        <TableCell>{r.fecha_fin || "-"}</TableCell>
+        <TableCell>{r.casino}</TableCell>
+        <TableCell>{r.maquina}</TableCell>
+        <TableCell className="text-right">{r.in?.toLocaleString()}</TableCell>
+        <TableCell className="text-right">{r.out?.toLocaleString()}</TableCell>
+        <TableCell className="text-right">{r.jackpot?.toLocaleString()}</TableCell>
+        <TableCell className="text-right">{r.billetero?.toLocaleString()}</TableCell>
+        <TableCell className="text-right">
+          {r.porcentaje_participacion ? r.porcentaje_participacion + "%" : "-"}
+        </TableCell>
+        <TableCell className="text-right font-semibold text-green-600">{r.utilidad?.toLocaleString()}</TableCell>
+        <TableCell className="text-right text-blue-700">{r.utilidad_participante?.toLocaleString() || "-"}</TableCell>
+        <TableCell className="text-right text-orange-700">{r.utilidad_operador?.toLocaleString() || "-"}</TableCell>
+      </TableRow>
+    ))}
+    <TableRow>
+      <TableCell colSpan={9} className="text-right font-bold">Total</TableCell>
+      <TableCell className="text-right font-bold text-green-700">
+        {utilidadTotal.toLocaleString()}
+      </TableCell>
+      <TableCell colSpan={2}></TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+
           )}
         </CardContent>
       </Card>
