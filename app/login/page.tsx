@@ -22,7 +22,7 @@ export default function LoginPage() {
 
   const [nombreApp, setNombreApp] = useState("CUADRE CASINO")
   const [logoUrl, setLogoUrl] = useState("")
-  const [ipLocal, setIpLocal] = useState("")
+  const [ipLocal, setIpLocal] = useState("localhost")
 
   useEffect(() => {
     const cargarConfiguracion = async () => {
@@ -36,11 +36,21 @@ export default function LoginPage() {
       }
     }
 
-    cargarConfiguracion()
-
-    if (typeof window !== "undefined") {
-      setIpLocal(window.location.hostname)
+    const obtenerIP = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/obtener-ip")
+        const data = await res.json()
+        if (data.ip) {
+          setIpLocal(data.ip)
+        }
+      } catch (error) {
+        console.error("No se pudo obtener la IP", error)
+        setIpLocal("localhost")
+      }
     }
+
+    cargarConfiguracion()
+    obtenerIP()
   }, [])
 
   useEffect(() => {
@@ -99,7 +109,7 @@ export default function LoginPage() {
             <br />
             <br />
             <span className="text-sm text-muted-foreground">
-              Tambien puede ingresar desde la dirección: {ipLocal}:3000
+              Tambien puede ingresar desde la direccion: {ipLocal}:3000
             </span>
           </CardDescription>
         </CardHeader>
